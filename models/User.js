@@ -14,6 +14,17 @@ const schema = new mongoose.Schema({
     unique: true,
     validate: validator.isEmail,
   },
+  number: {
+    type: Number,     //if no will most then type string and uncomment
+    default: null,
+    // required: [true, "Please enter your Mobile No"],
+    // validate: {
+    //   validator: function (v) {
+    //     return /^\d{10}$/.test(v); // Validates exactly 10 digits
+    //   },
+    //   message: "Mobile number must be 10 digits",
+    // },
+  },
   avatar: {
     public_id: {
       type: String,
@@ -32,8 +43,21 @@ const schema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["admin", "user"],
-    default: "admin",
+    enum: ["SuperAdmin","Admin", "Devloper","Contant Writer", "Desiner", "other"],
+    default: "Admin",
+  },
+  isview: {
+    type: String,
+    enum: ["public", "private"],
+    default: "public",
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  isblocked:{
+    type:Boolean,
+    default:false
   },
   createdAt: {
     type: Date,
@@ -66,4 +90,4 @@ schema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-export const Admin = mongoose.model("Admin", schema);
+export const User = mongoose.model("User", schema);
