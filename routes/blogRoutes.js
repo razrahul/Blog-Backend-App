@@ -1,6 +1,6 @@
 import express from "express"
 
-import {createBlog, addSubtitle} from "../controllers/blogController.js"
+import {createBlog, addSubtitle, getAllBlogs, deleteBlog, deleteSubtitle} from "../controllers/blogController.js"
 import { isAuthenticated, authorizeAdmin } from "../middlewares/auth.js"
 
 
@@ -12,8 +12,17 @@ const router = express.Router()
 
 router.route("/createblog").post(isAuthenticated, singleUpload, createBlog)
 
+//GEt All Blogs
+router.route("/blogs").get(isAuthenticated, getAllBlogs)
+
 //Add subtitle
-router.route("/blogs/:id").post(isAuthenticated, singleUpload, addSubtitle)
+router.route("/blogs/:id")
+        .delete(isAuthenticated, authorizeAdmin, deleteBlog)
+        .post(isAuthenticated, singleUpload, addSubtitle)
+
+// delete Subtitles
+
+router.route("/deletesubtitle").delete(isAuthenticated, deleteSubtitle)
 
 
 export default router;
