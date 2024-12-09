@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { User } from "./User.js";
 
-const schema = new mongoose.schema({
+const schema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -33,7 +33,11 @@ const schema = new mongoose.schema({
   },
 
   Subtitle: [
-    {
+    { 
+      indexNo:{
+        type:Number,
+        required:true
+      },
       title: {
         type: String,
         required: true,
@@ -41,15 +45,18 @@ const schema = new mongoose.schema({
       poster: {
         public_id: {
           type: String,
+          default: null,
         },
         url: {
           type: String,
+          default: null,
         },
       },
       description: {
         type: String,
         required: true,
       },
+      
     },
   ],
 
@@ -57,7 +64,7 @@ const schema = new mongoose.schema({
     type: Number,
     default: 0,
   },
-  numOfVideos: {
+  numOfBlog: {
     type: Number,
     default: 0,
   },
