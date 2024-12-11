@@ -5,7 +5,7 @@ import getDataUri from "../Utils/dataUri.js";
 import { v2 as cloudinary } from "cloudinary";
 
 export const createBlog = catchAsyncError(async (req, res, next) => {
-  const { title, description, category, createdBy } = req.body;
+  const { title, description, category, createdBy, isview } = req.body;
 
   if (!title || !description || !category) {
     return next(new ErrorHandler("Please fill all the fields", 400));
@@ -27,6 +27,7 @@ export const createBlog = catchAsyncError(async (req, res, next) => {
     description,
     category,
     createdBy,
+    isview,
     poster: {
       public_id: mycloud.public_id,
       url: mycloud.secure_url,
@@ -42,13 +43,23 @@ export const createBlog = catchAsyncError(async (req, res, next) => {
 
 //Get All Blogs
 export const getAllBlogs = catchAsyncError(async (req, res, next) => {
-  const blogs = await Blog.find({ isview: "public" }).sort({ createdAt: -1 });
+  const blogs = await Blog.find().sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,
     blogs,
   });
 });
+
+//Get All Blogs for only public
+// export const getAllBlogs = catchAsyncError(async (req, res, next) => {
+//   const blogs = await Blog.find({ isview: "public" }).sort({ createdAt: -1 });
+
+//   res.status(200).json({
+//     success: true,
+//     blogs,
+//   });
+// });
 
 // add Subtitle
 export const addSubtitle = catchAsyncError(async (req, res, next) => {
