@@ -66,6 +66,10 @@ export const addSubtitle = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
   const { indexNo, title, description } = req.body;
 
+  if(!title || !description) {
+    return next(new ErrorHandler("Title and Description must be provided", 400));
+  }
+
   // Fetch the blog
   const blog = await Blog.findById(id);
   if (!blog) return next(new ErrorHandler("Blog not found", 404));
@@ -77,7 +81,6 @@ export const addSubtitle = catchAsyncError(async (req, res, next) => {
   };
 
   // If file is uploaded, process it
-
   const file = req.file;
 
   if (file) {
@@ -85,8 +88,8 @@ export const addSubtitle = catchAsyncError(async (req, res, next) => {
     mycloud = await cloudinary.uploader.upload(fileUri.content);
   }
 
-  // Add new subtitle to the blog
-  blog.Subtitle.push({
+  // Create subtitle object
+  const newSubtitle = {
     indexNo,
     title,
     description,
@@ -94,7 +97,10 @@ export const addSubtitle = catchAsyncError(async (req, res, next) => {
       public_id: mycloud.public_id,
       url: mycloud.secure_url,
     },
-  });
+  };
+
+  // Add new subtitle to the blog
+  blog.Subtitle.push(newSubtitle);
 
   // Update the number of subtitles
   blog.numOfBlog = blog.Subtitle.length;
@@ -107,8 +113,50 @@ export const addSubtitle = catchAsyncError(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: `Subtitle added in Blog at IndexNo: ${indexNo}`,
+    blogId: id, // Return the blog's ID
+    subtitle: newSubtitle, // Return the newly added subtitle
   });
 });
+
+
+// add addFAQ
+export const addFAQ = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
+  const { indexNo, question, answer } = req.body;
+
+ if (!question || !answer) {
+    return next(new ErrorHandler("question and Answer Must be  fields", 400));
+  }
+
+  // Fetch the blog
+  const blog = await Blog.findById(id);
+  if (!blog) return next(new ErrorHandler("Blog not found", 404));
+
+  // Create subtitle object
+  const newFAQ = {
+    indexNo,
+    question,
+    answer,
+  };
+
+  // Add new newFAQ to the blog
+  blog.FAQ.push(newFAQ);
+
+  // Update the number of subtitles
+  blog.updateAt = Date.now();
+
+  // Save the blog
+  await blog.save();
+
+  // Respond to the client
+  res.status(200).json({
+    success: true,
+    message: `FAQ added in Blog at IndexNo: ${indexNo}`,
+    blogId: id, // Return the blog's ID
+    FAQ: newFAQ, // Return the newly added FAQ
+  });
+});
+
 
 // delete Blogs By id
 

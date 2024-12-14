@@ -1,6 +1,6 @@
 import express from "express"
 
-import {createBlog, addSubtitle, getAllBlogs, deleteBlog, deleteSubtitle} from "../controllers/blogController.js"
+import {createBlog, addSubtitle, getAllBlogs, deleteBlog, deleteSubtitle, addFAQ} from "../controllers/blogController.js"
 import { isAuthenticated, authorizeAdmin } from "../middlewares/auth.js"
 
 
@@ -19,6 +19,10 @@ router.route("/blogs").get(isAuthenticated, getAllBlogs)
 router.route("/blogs/:id")
         .delete(isAuthenticated, authorizeAdmin, deleteBlog)
         .post(isAuthenticated, singleUpload, addSubtitle)
+
+// Add FAQ
+
+router.route("/addfaq/:id").post(isAuthenticated, addFAQ)
 
 // delete Subtitles
 

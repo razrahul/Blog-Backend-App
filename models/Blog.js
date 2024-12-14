@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { User } from "./User.js";
+import ErrorHandler from "../Utils/errorHandler.js";
 
 const schema = new mongoose.Schema({
   user: {
@@ -36,7 +37,8 @@ const schema = new mongoose.Schema({
     { 
       indexNo:{
         type:Number,
-        required:true
+        required:true,
+        default: Number,
       },
       title: {
         type: String,
@@ -56,8 +58,33 @@ const schema = new mongoose.Schema({
         type: String,
         required: true,
       },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
       
     },
+  ],
+
+  FAQ:[
+    {
+      indexNo:{
+        type:Number,
+        unique:true,
+      },
+      question:{
+        type:String,
+        required:true,
+      },
+      answer:{
+        type:String,
+        required:true,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+    }
   ],
 
   views: {
@@ -88,5 +115,19 @@ const schema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// Middleware to ensure unique indexNo in Subtitle array
+schema.pre("save", function (next) {
+  const indexNumbers = this.Subtitle.map((item) => item.indexNo);
+  const hasDuplicates = indexNumbers.some(
+    (index, i) => indexNumbers.indexOf(index) !== i
+  );
+
+  if (hasDuplicates) {
+    return next(new ErrorHandler("Subtitle indexNo must be unique.", 400));
+  }
+  next();
+});
+
 
 export const Blog = mongoose.model("Blog", schema);
