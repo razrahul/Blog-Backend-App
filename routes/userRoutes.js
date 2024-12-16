@@ -10,7 +10,8 @@ import {
   updateUserverification,
   updateUserBlockConformation,
 } from "../controllers/userController.js";
-import { isAuthenticated, authorizeAdmin } from "../middlewares/auth.js";
+import { isAuthenticated, authorizeAdmin,  } from "../middlewares/auth.js";
+import { cheackUser } from "../middlewares/cheackUser.js";
 
 const router = express.Router();
 

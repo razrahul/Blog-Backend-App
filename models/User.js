@@ -43,7 +43,7 @@ const schema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["SuperAdmin","Admin", "Devloper","Contant Writer", "Desiner", "other"],
+    enum: ["SuperAdmin","Admin", "Devloper","Contant Writer", "Designer", "other"],
     default: "Admin",
   },
   isview: {
@@ -59,17 +59,9 @@ const schema = new mongoose.Schema({
     type:Boolean,
     default:false
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
   resetPasswordToken: String,
   resetPasswordExpire: String,
-});
+},{timestamps: true});
 
 // Hash the password before saving
 schema.pre("save", async function (next) {

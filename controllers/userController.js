@@ -57,6 +57,10 @@ export const login = catchAsyncError(async (req, res, next) => {
 
   if (!isPasswordMatched) return next(new ErrorHandler(invalidPass, 401));
 
+  if(!(user.isVerified)) return next(new ErrorHandler("you Are Not Verified , Please Contact Admin", 401))
+
+  if(user.isblocked) return next(new ErrorHandler("you Are Blocked, Please Contact Admin", 401))
+
   // Compare passwords (plain-text comparison)
   // if (admin.password !== password) {
   //     return next(new ErrorHandler("Invalid email or only password", 401));
@@ -105,6 +109,28 @@ export const getAllUsers = catchAsyncError(async (req, res, next) => {
   });
 });
 
+//update user view 
+
+export const updateUserView = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) return next(new ErrorHandler("User not Found", 404));
+
+//   if (user.isview === "public") user.isview = "private";
+//   else user.isview = "public";
+
+  // Toggle the 'isview' value between "public" and "private"
+
+    user.isview = user.isview === "public" ? "private" : "public";
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: " View Updated",
+  });
+});
+
 
 
 // update user verification  
@@ -124,27 +150,6 @@ export const updateUserverification  = catchAsyncError(async (req, res, next) =>
   });
 });
 
-//update user view 
-
-export const updateUserView = catchAsyncError(async (req, res, next) => {
-    const user = await User.findById(req.params.id);
-  
-    if (!user) return next(new ErrorHandler("User not Found", 404));
-  
-  //   if (user.isview === "public") user.isview = "private";
-  //   else user.isview = "public";
-  
-    // Toggle the 'isview' value between "public" and "private"
-  
-      user.isview = user.isview === "public" ? "private" : "public";
-  
-    await user.save();
-  
-    res.status(200).json({
-      success: true,
-      message: " View Updated",
-    });
-  });
 
 
 // update user block conformation

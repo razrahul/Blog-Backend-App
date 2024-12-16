@@ -3,10 +3,6 @@ import { User } from "./User.js";
 import ErrorHandler from "../Utils/errorHandler.js";
 
 const schema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
   title: {
     type: String,
     required: [true, "Please enter course title"],
@@ -37,8 +33,7 @@ const schema = new mongoose.Schema({
     { 
       indexNo:{
         type:Number,
-        required:true,
-        default: Number,
+        unique: true,
       },
       title: {
         type: String,
@@ -58,12 +53,8 @@ const schema = new mongoose.Schema({
         type: String,
         required: true,
       },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
       
-    },
+    },{timestamps: true}
   ],
 
   FAQ:[
@@ -80,18 +71,14 @@ const schema = new mongoose.Schema({
         type:String,
         required:true,
       },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
-    }
+    },{timestamps: true},
   ],
 
   views: {
     type: Number,
     default: 0,
   },
-  numOfBlog: {
+  numOfSubtitles: {
     type: Number,
     default: 0,
   },
@@ -100,21 +87,13 @@ const schema = new mongoose.Schema({
     default: "public",
     enum: ["public", "private"],
   },
-
   createdBy: {
-    type: String,
-    required: [true, "Enter Course Creator Name"],
-    default: User.name,
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "User", 
+    required: true,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updateAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  
+},{timestamps: true});
 
 // Middleware to ensure unique indexNo in Subtitle array
 schema.pre("save", function (next) {
