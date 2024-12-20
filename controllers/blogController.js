@@ -66,8 +66,10 @@ export const addSubtitle = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
   const { indexNo, title, description } = req.body;
 
-  if(!title || !description) {
-    return next(new ErrorHandler("Title and Description must be provided", 400));
+  if (!title || !description) {
+    return next(
+      new ErrorHandler("Title and Description must be provided", 400)
+    );
   }
 
   // Fetch the blog
@@ -118,13 +120,12 @@ export const addSubtitle = catchAsyncError(async (req, res, next) => {
   });
 });
 
-
 // add addFAQ
 export const addFAQ = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
   const { indexNo, question, answer } = req.body;
 
- if (!question || !answer) {
+  if (!question || !answer) {
     return next(new ErrorHandler("question and Answer Must be  fields", 400));
   }
 
@@ -143,7 +144,6 @@ export const addFAQ = catchAsyncError(async (req, res, next) => {
   blog.FAQ.push(newFAQ);
 
   // Update the number of subtitles
-  blog.updateAt = Date.now();
 
   // Save the blog
   await blog.save();
@@ -156,7 +156,6 @@ export const addFAQ = catchAsyncError(async (req, res, next) => {
     FAQ: newFAQ, // Return the newly added FAQ
   });
 });
-
 
 // delete Blogs By id
 
@@ -192,41 +191,31 @@ export const deleteBlog = catchAsyncError(async (req, res, next) => {
 export const deleteSubtitle = catchAsyncError(async (req, res, next) => {
   const { blogId, subtitleId } = req.query;
 
-  // Find the blog
   const blog = await Blog.findById(blogId);
   if (!blog) return next(new ErrorHandler("Blog not found", 404));
 
-  // Find the subtitle index
-  const subtitleIndex = blog.Subtitle.findIndex(
-    (subtitle) => subtitle._id.toString() === subtitleId
-  );
-  console.log(subtitleIndex);
+  const subtitle = blog.Subtitle.find((item) => {
+    if (item._id.toString() === subtitleId.toString()) return item;
+  });
+  
+  if (!subtitle) return next(new ErrorHandler("Subtitle not found", 404));
 
-  if (subtitleIndex === -1)
-    return next(new ErrorHandler("Subtitle not found", 404));
-
-  // Delete file from Cloudinary (only if it exists)
-  const publicId = blog.Subtitle[subtitleIndex]?.poster?.public_id;
-  if (publicId) {
-    await cloudinary.uploader.destroy(publicId);
+  // Delete the poster from Cloudinary if it exists
+  if (subtitle.poster?.public_id) {
+    await cloudinary.uploader.destroy(subtitle.poster.public_id);
   }
-  //find indexNo
-  const indexno = blog.Subtitle[subtitleIndex].indexNo;
-  console.log(publicId, indexno);
 
-  // Remove the subtitle from the array
-  blog.Subtitle.splice(subtitleIndex, 1);
+  blog.Subtitle = blog.Subtitle.filter((item) => {
+    if(item._id.toString() !== subtitleId.toString()) return item;
+  })
 
-  // Update the numOfBlog field
-  blog.numOfBlog = blog.Subtitle.length;
+  blog.numOfSubtitles = blog.Subtitle.length;
 
-  // Save the updated blog document
   await blog.save();
 
-  // Respond to client
   res.status(200).json({
     success: true,
-    message: `Subtitle ai index : ${indexno} Deleted Successfully`,
-    numOfBlog: `Rest Of Subtitle: ${blog.numOfBlog}`,
+    message: "Subtitle deleted successfully.",
+    remainingSubtitles: blog.numOfSubtitles,
   });
 });

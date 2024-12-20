@@ -3,6 +3,10 @@ import { User } from "./User.js";
 import ErrorHandler from "../Utils/errorHandler.js";
 
 const schema = new mongoose.Schema({
+  user:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:User,
+  },
   title: {
     type: String,
     required: [true, "Please enter course title"],
@@ -88,9 +92,7 @@ const schema = new mongoose.Schema({
     enum: ["public", "private"],
   },
   createdBy: {
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User", 
-    required: true,
+    type: String, 
   },
   
 },{timestamps: true});
