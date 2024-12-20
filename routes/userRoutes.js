@@ -12,11 +12,12 @@ import {
 } from "../controllers/userController.js";
 import { isAuthenticated, authorizeAdmin,  } from "../middlewares/auth.js";
 import { cheackUser } from "../middlewares/cheackUser.js";
+import singleUpload from "../middlewares/multer.js";
 
 const router = express.Router();
 
 //register
-router.route("/register").post(register);
+router.route("/register").post(singleUpload, register);
 
 //login
 router.route("/login").post(login);

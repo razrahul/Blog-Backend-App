@@ -2,6 +2,8 @@ import { User } from "../models/User.js";
 import { catchAsyncError } from "../middlewares/catchAsyncError.js";
 import { sendToken } from "../utils/sendToken.js";
 import ErrorHandler from "../Utils/errorHandler.js";
+import getDataUri from "../Utils/dataUri.js";
+import { v2 as cloudinary } from "cloudinary";
 import {
   allfiled,
   invalid,
@@ -12,18 +14,24 @@ import {
 export const register = catchAsyncError(async (req, res, next) => {
   const { name, email, number, password, role } = req.body;
 
-  const file = req.file;
-
   if (!name || !email || !password)
     return next(new ErrorHandler(allfiled, 400));
 
   let user = await User.findOne({ email });
   if (user) return next(new ErrorHandler("USer Already Exist", 409));
-  // upload file on cloudanary
 
-  // const fileUri = getDataUri(file);
+  // Default Cloudinary upload response if no file is provided
+  let myCloud = {
+    public_id: null,
+    secure_url: null,
+  };
 
-  // const myCloud = await cloudinary.uploader.upload(fileUri.content)
+  const file = req.file;
+  //if  upload file then on cloudanary 
+  if (file) {
+    const fileUri = getDataUri(req.file);
+    myCloud = await cloudinary.uploader.upload(fileUri.content);
+  }
 
   user = await User.create({
     name,
@@ -31,12 +39,16 @@ export const register = catchAsyncError(async (req, res, next) => {
     number,
     password,
     role,
-    //  avatar:{
-    //     public_id: myCloud.public_id,
-    //     url: myCloud.secure_url,
-    //  }
+     avatar:{
+        public_id: myCloud.public_id,
+        url: myCloud.secure_url,
+     }
   });
-  sendToken(res, user, "Register Suessfully ", 201);
+  res.status(200).json({
+    success: true,
+    message: "User registered successfully. Please contact Admin for verification.",
+    user,
+  });
 });
 
 //login controller
@@ -57,9 +69,13 @@ export const login = catchAsyncError(async (req, res, next) => {
 
   if (!isPasswordMatched) return next(new ErrorHandler(invalidPass, 401));
 
-  if(!(user.isVerified)) return next(new ErrorHandler("you Are Not Verified , Please Contact Admin", 401))
+  if (!user.isVerified)
+    return next(
+      new ErrorHandler("you Are Not Verified , Please Contact Admin", 401)
+    );
 
-  if(user.isblocked) return next(new ErrorHandler("you Are Blocked, Please Contact Admin", 401))
+  if (user.isblocked)
+    return next(new ErrorHandler("you Are Blocked, Please Contact Admin", 401));
 
   // Compare passwords (plain-text comparison)
   // if (admin.password !== password) {
@@ -109,19 +125,19 @@ export const getAllUsers = catchAsyncError(async (req, res, next) => {
   });
 });
 
-//update user view 
+//update user view
 
 export const updateUserView = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.params.id);
 
   if (!user) return next(new ErrorHandler("User not Found", 404));
 
-//   if (user.isview === "public") user.isview = "private";
-//   else user.isview = "public";
+  //   if (user.isview === "public") user.isview = "private";
+  //   else user.isview = "public";
 
   // Toggle the 'isview' value between "public" and "private"
 
-    user.isview = user.isview === "public" ? "private" : "public";
+  user.isview = user.isview === "public" ? "private" : "public";
 
   await user.save();
 
@@ -131,45 +147,44 @@ export const updateUserView = catchAsyncError(async (req, res, next) => {
   });
 });
 
+// update user verification
+export const updateUserverification = catchAsyncError(
+  async (req, res, next) => {
+    const user = await User.findById(req.params.id);
 
+    if (!user) return next(new ErrorHandler("User not Found", 404));
 
-// update user verification  
-export const updateUserverification  = catchAsyncError(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
+    // Toggle the 'isVerified' property
+    user.isVerified = !user.isVerified;
 
-  if (!user) return next(new ErrorHandler("User not Found", 404));
+    await user.save();
 
-  // Toggle the 'isVerified' property
-  user.isVerified = !user.isVerified;
-
-  await user.save();
-
-  res.status(200).json({
-    success: true,
-    message: " verification Updated",
-  });
-});
-
-
+    res.status(200).json({
+      success: true,
+      message: " verification Updated",
+    });
+  }
+);
 
 // update user block conformation
 
-export const updateUserBlockConformation  = catchAsyncError(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
+export const updateUserBlockConformation = catchAsyncError(
+  async (req, res, next) => {
+    const user = await User.findById(req.params.id);
 
-  if (!user) return next(new ErrorHandler("User not Found", 404));
+    if (!user) return next(new ErrorHandler("User not Found", 404));
 
-  // Toggle the 'isblocked' property
-  user.isblocked = !user.isblocked;
+    // Toggle the 'isblocked' property
+    user.isblocked = !user.isblocked;
 
-  await user.save();
+    await user.save();
 
-  res.status(200).json({
-    success: true,
-    message: " Block Conformation Updated",
-  });
-});
-
+    res.status(200).json({
+      success: true,
+      message: " Block Conformation Updated",
+    });
+  }
+);
 
 // delete user
 
