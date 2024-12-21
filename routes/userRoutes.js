@@ -27,7 +27,7 @@ router.route("/logout").get(logout);
 
 //profile
 
-router.route("/me").get(isAuthenticated, getUserProfile);
+router.route("/me").get(isAuthenticated, cheackUser, getUserProfile);
 
 //  routes for SuperAdmin
 router

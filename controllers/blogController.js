@@ -106,7 +106,7 @@ export const addSubtitle = catchAsyncError(async (req, res, next) => {
 
   // Update the number of subtitles
   blog.numOfBlog = blog.Subtitle.length;
-  blog.updateAt = Date.now();
+ 
 
   // Save the blog
   await blog.save();
