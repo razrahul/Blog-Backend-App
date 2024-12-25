@@ -1,6 +1,6 @@
 import { User } from "../models/User.js";
 import { catchAsyncError } from "../middlewares/catchAsyncError.js";
-import { sendToken } from "../utils/sendToken.js";
+import sendToken from "../Utils/sendToken.js";
 import ErrorHandler from "../Utils/errorHandler.js";
 import getDataUri from "../Utils/dataUri.js";
 import { v2 as cloudinary } from "cloudinary";
