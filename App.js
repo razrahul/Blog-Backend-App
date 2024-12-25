@@ -12,7 +12,7 @@ config({
 const app = express();
 
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://e-learning5173.netlify.app'], // Allows all origins
+  origin: [process.env.LOCALHOST_URL, process.env.FRONTEND_URL], // Allows all origins
   methods: ["GET","POST","PUT","DELETE"],
   credentials: true, // Allows cookies and other credentials to be sent with the request
 };
