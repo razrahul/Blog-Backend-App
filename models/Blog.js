@@ -35,9 +35,9 @@ const schema = new mongoose.Schema({
 
   Subtitle: [
     { 
-      indexNo:{
-        type:Number,
-        unique: true,
+      indexNo: {
+        type: Number,
+        default: 0, // Default value, will be updated in pre-save hook
       },
       title: {
         type: String,
@@ -96,6 +96,20 @@ const schema = new mongoose.Schema({
   },
   
 },{timestamps: true});
+
+// Pre-save hook to set the indexNo for each new subtitle and FAQ
+schema.pre("save", function (next) {
+  const blog = this;
+
+  // Set indexNo for new subtitles
+  blog.Subtitle.forEach((subtitle, index) => {
+    if (subtitle.isNew) {
+      subtitle.indexNo = index + 1;
+    }
+  });
+
+  next();
+});
 
 // Middleware to ensure unique indexNo in Subtitle array
 schema.pre("save", function (next) {
