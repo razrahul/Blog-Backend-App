@@ -13,7 +13,7 @@ const router = express.Router()
 router.route("/createblog").post(isAuthenticated, singleUpload, createBlog)
 
 //GEt All Blogs
-router.route("/blogs").get(isAuthenticated, getAllBlogs)
+router.route("/blogs").get( getAllBlogs)
 
 //Add subtitle
 router.route("/blogs/:id")
