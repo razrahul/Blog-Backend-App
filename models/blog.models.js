@@ -26,21 +26,20 @@ const schema = new mongoose.Schema(
       minLength: [20, "Title must be at least 20 characters"],
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
       required: true,
     },
-
     Subtitle: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Subtitle",
       },
     ],
-    company:{
+    company: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
     },
-
     views: {
       type: Number,
       default: 0,
@@ -77,32 +76,5 @@ const schema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-// Pre-save hook to set the indexNo for each new subtitle and FAQ
-schema.pre("save", function (next) {
-  const blog = this;
-
-  // Set indexNo for new subtitles
-  blog.Subtitle.forEach((subtitle, index) => {
-    if (subtitle.isNew) {
-      subtitle.indexNo = index + 1;
-    }
-  });
-
-  next();
-});
-
-// Middleware to ensure unique indexNo in Subtitle array
-schema.pre("save", function (next) {
-  const indexNumbers = this.Subtitle.map((item) => item.indexNo);
-  const hasDuplicates = indexNumbers.some(
-    (index, i) => indexNumbers.indexOf(index) !== i
-  );
-
-  if (hasDuplicates) {
-    return next(new ErrorHandler("Subtitle indexNo must be unique.", 400));
-  }
-  next();
-});
 
 export const Blog = mongoose.model("Blog", schema);

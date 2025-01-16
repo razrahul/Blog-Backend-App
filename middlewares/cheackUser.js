@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { User } from "../models/User.js";
+import { User } from "../models/user.models.js";
 import ErrorHandler from "../Utils/errorHandler.js";
 import { catchAsyncError } from "./catchAsyncError.js";
 
@@ -20,9 +20,11 @@ export const cheackUser = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Access Denied: Invalid token", 401));
   }
 
- 
-
-  const user = await User.findById(decoded._id);
+  // const user = await User.findById(decoded._id);
+  const user = await User.findOne({
+    _id: decoded._id,
+    isdelete: false,
+  });
 
   if (!user) {
     // Expire the token immediately if user is not found
@@ -32,8 +34,28 @@ export const cheackUser = catchAsyncError(async (req, res, next) => {
       secure: true,
       sameSite: "none",
     });
-    return next(new ErrorHandler("User not found. Token has been invalidated.", 404));
+    return next(
+      new ErrorHandler("User not found. Token has been invalidated.", 404)
+    );
   }
+
+  // cheack if the user is not active
+  // if (!user.isactive) {
+  //   // Expire the token immediately
+  //   res.cookie("token", null, {
+  //     expires: new Date(Date.now()),
+  //     httpOnly: true,
+  //     secure: true,
+  //     sameSite: "none",
+  //   });
+  //   return next(
+  //     new ErrorHandler(
+  //       "Access Denied: User is not active. Please contact Admin.",
+  //       403
+  //     )
+  //   );
+  // }
+
 
   // Check if the user is blocked
   if (user.isblocked) {
@@ -44,7 +66,12 @@ export const cheackUser = catchAsyncError(async (req, res, next) => {
       secure: true,
       sameSite: "none",
     });
-    return next(new ErrorHandler("Access Denied: User is blocked. Please contact Admin.", 403));
+    return next(
+      new ErrorHandler(
+        "Access Denied: User is blocked. Please contact Admin.",
+        403
+      )
+    );
   }
 
   // Check if the user is verified
@@ -55,7 +82,12 @@ export const cheackUser = catchAsyncError(async (req, res, next) => {
       secure: true,
       sameSite: "none",
     });
-    return next(new ErrorHandler("Access Denied: User is not verified. Please contact Admin.", 403));
+    return next(
+      new ErrorHandler(
+        "Access Denied: User is not verified. Please contact Admin.",
+        403
+      )
+    );
   }
 
   // Attach user to the request object for further use

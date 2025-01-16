@@ -1,15 +1,17 @@
 import mongoose from "mongoose";
-import { User } from "./User";
 
-const subtitleSchems = new mongoose.Schema(
+const schema = new mongoose.Schema(
   {
-    indexNo: {
-      type: Number,
-      default: 0, 
-    },
     title: {
       type: String,
-      required: true,
+      required: [true, "Please enter subtitle title"],
+      minLength: [4, "Title must be at least 4 characters"],
+      maxLength: [80, "Title can't exceed 80 characters"],
+    },
+    description: {
+      type: String,
+      required: [true, "Please enter subtitle description"],
+      minLength: [20, "Description must be at least 20 characters"],
     },
     poster: {
       public_id: {
@@ -21,32 +23,33 @@ const subtitleSchems = new mongoose.Schema(
         default: null,
       },
     },
-    description: {
-      type: String,
+    blog: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Blog",
       required: true,
     },
-    createdBy:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
-    updateddBy:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
-    deletedBy:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
-    isactive:{
-        type:Boolean,
-        default: true
+    isactive: {
+      type: Boolean,
+      default: true,
     },
-    isdelete:{
-        type:Boolean,
-        default:false
-    }
+    isdelete: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
-export const Subtitle = mongoose.model("Subtitle", subtitleSchems);
+export const Subtitle = mongoose.model("Subtitle", schema);

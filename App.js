@@ -34,10 +34,20 @@ app.use(cookieParser());
 // Importing & using Routes
 import user from "./routes/userRoutes.js"
 import blog from "./routes/blogRoutes.js"
+import role from "./routes/roleRoutes.js"
+import category from "./routes/categoryRoutes.js"
+import company from "./routes/companyRoutes.js"
+import admin from "./routes/adminRoutes.js"
+import subtitle from "./routes/subtitleRoutes.js"
 
 
 app.use("/api/v1", user);
 app.use("/api/v1", blog);
+app.use("/api/v1", role);
+app.use("/api/v1", category);
+app.use("/api/v1", company);
+app.use("/api/v1", admin);
+app.use("/api/v1", subtitle);
 
 export default app;
 
