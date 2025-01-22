@@ -3,6 +3,8 @@ import {config} from "dotenv"
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import ErrorMiddleware from "./middlewares/Error.js";
+import morganMiddleware from "./logger/morgan.logger.js";
+
 
 config({
     path: "./config/config.env",
@@ -10,6 +12,9 @@ config({
 
 
 const app = express();
+
+//loger
+app.use(morganMiddleware);
 
 const corsOptions = {
   origin: [process.env.LOCALHOST_URL, process.env.FRONTEND_URL], // Allows all origins
