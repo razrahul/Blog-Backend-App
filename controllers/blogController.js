@@ -157,6 +157,14 @@ export const getAllDeletedBlogs = catchAsyncError(async (req, res, next) => {
       path: "createdBy",
       select: "name",
     })
+    // .populate({
+    //   path: "updatedBy",
+    //   select: "name",
+    // })
+    // .populate({
+    //   path: "deletedBy",
+    //   select: "name",
+    // })
     .populate({
       path: "Subtitle",
       select: "-__v",
