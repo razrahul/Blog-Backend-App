@@ -241,11 +241,18 @@ export const updateUserProfile = catchAsyncError(async (req, res, next) => {
   // });
   // if (existeduser) return next(new ErrorHandler(`${username} ${email} Already Exist, Please try Other`, 409));
 
-  if (name) user.name = name;
-  //don't update
-  // if (username) user.username = username;
-  if (email) user.email = email;
-  if (number) user.number = number;
+  // Only update if new values are provided and different from existing values
+  if (name && name !== user.name) user.name = name;
+  
+  // Check if the new email already exists in the database (excluding the current user)
+  if (email && email !== user.email) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser._id.toString() !== req.user._id.toString()) {
+      return next(new ErrorHandler("Email already exists. Please use a different email.", 409));
+    }
+    user.email = email; // Update only if it's unique
+  }
+  if (number && number !== user.number) user.number = number;
 
   // if (password) {
   //   user.password = await bcrypt.hash(password, 10);
