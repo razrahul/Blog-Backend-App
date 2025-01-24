@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
+import logger from "../logger/winston.logger.js";
 
 export const connectDB = async () => {
   try {
       const conn = await mongoose.connect(process.env.MONGO_URI);
 
-      console.log(`MongoDB Connected: ${conn.connection.host}`);
+      logger.info(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-      console.error(`Error: ${error.message}`);
+      logger.error(`Error: ${error.message}`);
       
   }
 };
