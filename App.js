@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import ErrorMiddleware from "./middlewares/Error.js";
 import morganMiddleware from "./logger/morgan.logger.js";
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './swagger-output.json' assert {type:'json'};
 
 
 config({
@@ -54,6 +56,11 @@ app.use("/api/v1", company);
 app.use("/api/v1", admin);
 app.use("/api/v1", subtitle);
 
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  explorer: true,
+  filter: true,
+}));
 export default app;
 
 app.use(ErrorMiddleware);
