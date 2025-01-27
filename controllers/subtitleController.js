@@ -209,3 +209,5 @@ export const restoreSubtitle = catchAsyncError(async (req, res, next) => {
     subtitle: restoreSubtitle,
   });
 });
+
+//Note: parmenet Delete Blog time delete in id from in blog model

@@ -43,14 +43,15 @@ export const updateUserRoleAndCompany = catchAsyncError(async (req, res, next) =
 
 //restore Role
 export const restoreRole = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
   const role = await Role.findOne({
-    _id: req.params.id,
-    isdelete: true,
+    _id: id,
+    isdeleted: true,
   }); 
 
   if (!role) return next(new ErrorHandler("Role not Found", 404));
 
-  role.isdelete = false;
+  role.isdeleted = false;
   role.deletedBy = null;
 
   role.updatedBy = req.user._id;
@@ -92,12 +93,12 @@ export const restoreCompany = catchAsyncError(async (req, res, next) => {
 export const restoreCategory = catchAsyncError(async (req, res, next) => {
   const category = await Category.findOne({
     _id: req.params.id,
-    isdelete: true
+    isdeleted: true
   })
 
   if(!category) return next(new ErrorHandler("Category not Found", 404));
 
-  category.isdelete = false;
+  category.isdeleted = false;
   category.deletedBy = null;
 
   category.updatedBy = req.user._id;

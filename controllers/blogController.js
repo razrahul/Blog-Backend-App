@@ -178,6 +178,125 @@ export const getAllDeletedBlogs = catchAsyncError(async (req, res, next) => {
   });
 });
 
+// export const getAllDeletedBlogs = catchAsyncError(async (req, res, next) => {
+//   const blogs = await Blog.aggregate([
+//     { $match: { isdelete: true } },
+//     { $sort: { createdAt: -1 } },
+
+//     // Lookup for category
+//     {
+//       $lookup: {
+//         from: "categories",
+//         localField: "category",
+//         foreignField: "_id",
+//         as: "category",
+//       },
+//     },
+//     { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+
+//     // Lookup for company
+//     {
+//       $lookup: {
+//         from: "companies",
+//         localField: "company",
+//         foreignField: "_id",
+//         as: "company",
+//       },
+//     },
+//     { $unwind: { path: "$company", preserveNullAndEmptyArrays: true } },
+
+//     // Lookup for createdBy (User Model)
+//     {
+//       $lookup: {
+//         from: "users",
+//         localField: "createdBy",
+//         foreignField: "_id",
+//         as: "createdBy",
+//       },
+//     },
+//     { $unwind: { path: "$createdBy", preserveNullAndEmptyArrays: true } },
+
+//     // Lookup for updatedBy (User Model)
+//     {
+//       $lookup: {
+//         from: "users",
+//         localField: "updatedBy",
+//         foreignField: "_id",
+//         as: "updatedBy",
+//       },
+//     },
+//     { $unwind: { path: "$updatedBy", preserveNullAndEmptyArrays: true } },
+
+//     // Lookup for deletedBy (User Model)
+//     {
+//       $lookup: {
+//         from: "users",
+//         localField: "deletedBy",
+//         foreignField: "_id",
+//         as: "deletedBy",
+//       },
+//     },
+//     { $unwind: { path: "$deletedBy", preserveNullAndEmptyArrays: true } },
+
+//     // Lookup for Subtitle (Only non-deleted and sorted by createdAt)
+//     {
+//       $lookup: {
+//         from: "subtitles",
+//         let: { subtitleIds: "$Subtitle" },
+//         pipeline: [
+//           {
+//             $match: {
+//               $expr: { $in: ["$_id", "$$subtitleIds"] }, // Match subtitles linked to the blog
+//               isdelete: false, // Only fetch non-deleted subtitles
+//             },
+//           },
+//           { $sort: { createdAt: 1 } }, // Sort by createdAt ascending (oldest first)
+//         ],
+//         as: "Subtitle",
+//       },
+//     },
+//     // Project only required fields
+//     {
+//       $project: {
+//         _id: 1,
+//         title: 1,
+//         poster: 1,
+//         description: 1,
+//         poster: 1,
+//         views: 1,
+//         numOfSubtitles: 1,
+//         ispublic: 1,
+//         isactive: 1,
+//         createdAt: 1,
+//         updatedAt: 1,
+//         "category.name": 1,
+//         "company.companyName": 1,
+//         "company.companyId": 1,
+//         "createdBy.name": 1,
+//         "updatedBy.name": 1,
+//         "deletedBy.name": 1,
+//         "Subtitle._id": 1,
+//         "Subtitle.title": 1,
+//         "Subtitle.description": 1,
+//         "Subtitle.poster": 1,
+//         "Subtitle.blog": 1,
+//         "Subtitle.createdBy": 1,
+//         "Subtitle.updatedBy": 1,
+//         "Subtitle.deletedBy": 1,
+//         "Subtitle.isactive": 1,
+//         "Subtitle.createdAt": 1,
+//         "Subtitle.updatedAt": 1,
+//       },
+//     },
+//   ]);
+
+//   res.status(200).json({
+//     success: true,
+//     message: "All deleted Blogs successfully found",
+//     blogs,
+//   });
+// });
+
 //Get Blog by ID
 export const getBlogById = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
@@ -216,7 +335,6 @@ export const getBlogById = catchAsyncError(async (req, res, next) => {
     blog,
   });
 });
-
 
 // Update Blog
 export const updateBlog = catchAsyncError(async (req, res, next) => {
