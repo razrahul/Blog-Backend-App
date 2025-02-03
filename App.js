@@ -5,12 +5,27 @@ import cors from "cors";
 import ErrorMiddleware from "./middlewares/Error.js";
 import morganMiddleware from "./logger/morgan.logger.js";
 import swaggerUi from 'swagger-ui-express';
-import swaggerDocument from './swagger-output.json' assert {type:'json'};
+// import swaggerDocument from './swagger-output.json' assert {type:'json'};
+import fs from "fs";
+import { fileURLToPath } from "url";
+import path from "path";
+import YAML from "yaml";
 
 
 config({
     path: "./config/config.env",
   });
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const file = fs.readFileSync(path.resolve(__dirname, "./swagger.yaml"), "utf8");
+const swaggerDocument = YAML.parse(
+  file?.replace(
+    "- url: ${{server}}",
+    `- url: ${process.env.BLOGAPP_HOST_URL || "http://localhost:5000"}/api/v1`
+  )
+);
 
 
 const app = express();
@@ -19,7 +34,7 @@ const app = express();
 app.use(morganMiddleware);
 
 const corsOptions = {
-  origin: [process.env.LOCALHOST_URL, process.env.FRONTEND_URL], // Allows all origins
+  origin: [process.env.LOCALHOST_URL, process.env.FRONTEND_URL, process.env.SWAGGER_URL], // Allows all origins
   methods: ["GET","POST","PUT","DELETE"],
   credentials: true, // Allows cookies and other credentials to be sent with the request
 };
@@ -57,10 +72,23 @@ app.use("/api/v1", admin);
 app.use("/api/v1", subtitle);
 
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
-  explorer: true,
-  filter: true,
-}));
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+//   explorer: true,
+//   filter: true,
+// }));
+
+// * API DOCS
+// ? Keeping swagger code at the end so that we can load swagger on "/" route
+app.use(
+  "/",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    swaggerOptions: {
+      docExpansion: "none", // keep all the sections collapsed by default
+    },
+    customSiteTitle: "Blog App API docs",
+  })
+);
 export default app;
 
 app.use(ErrorMiddleware);

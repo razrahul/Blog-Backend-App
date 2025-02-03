@@ -1,0 +1,809 @@
+openapi: 3.0.0
+info:
+  title: Techtime Blog App 
+  description: |-
+    This is a sample Pet Store Server based on the OpenAPI 3.0 specification.  You can find out more about
+    
+    You can now help us improve the API whether it's by making changes to the definition itself or to the code.
+    That way, with time, we can improve the API in general, and expose some of the new features in OAS3.
+
+    _If you're looking for the Swagger 2.0/OAS 2.0 version of Petstore, then click [here](https://editor.swagger.io/?url=https://petstore.swagger.io/v2/swagger.yaml). Alternatively, you can load via the `Edit > Load Petstore OAS 2.0` menu option!_
+    
+    Some useful links:
+    # - [The  Blog Store repository](https://github.com/razrahul/Client-Backend)
+    # - [Frotend Url](https://contact-fromdata.netlify.app)
+    termsOfService: http://swagger.io/terms/
+  contact:
+    email: razrahuleee@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: https://blog-backend-app-e6si.onrender.com
+  # - url: 5000/pai/v1
+    description: Development server
+components:
+  securitySchemes:
+    noauthAuth:
+      type: http
+      scheme: noauth
+tags:
+  - name: Role
+  - name: Api
+  - name: Category
+  - name: Company
+  - name: Admin
+  - name: Blog
+  - name: Subtitle
+  - name: user
+paths:
+  /api/v1/roles:
+    get:
+      tags:
+        - Role
+      summary: Get all Route
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/role:
+    post:
+      tags:
+        - Role
+      summary: create Role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: Other
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/role/67718b1b1534fc03b79b874a:
+    delete:
+      tags:
+        - Role
+      summary: delete Role
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/role/6770f5a6785566613ad99b18:
+    get:
+      tags:
+        - Role
+      summary: get Role By Id
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    put:
+      tags:
+        - Role
+      summary: Update Role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: Devloper
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/role/activity/6770f5a6785566613ad99b18:
+    patch:
+      tags:
+        - Role
+      summary: change Activity
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/roles/deleted:
+    get:
+      tags:
+        - Role
+      summary: Get all Deleted Role
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /role/restore/67718b1b1534fc03b79b874a:
+    put:
+      tags:
+        - Role
+      summary: restore Role
+      requestBody:
+        content: {}
+      security:
+        - noauthAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/categories:
+    get:
+      tags:
+        - Category
+      summary: Get All Category
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/category:
+    post:
+      tags:
+        - Category
+      summary: create Category
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: "B2B\_Marketing"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/category/6772a331d5d4a36bb11a066c:
+    get:
+      tags:
+        - Category
+      summary: Get Category by Id
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - Category
+      summary: Delete Category
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    put:
+      tags:
+        - Category
+      summary: Update Category
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/category/activity/6772a331d5d4a36bb11a066c:
+    patch:
+      tags:
+        - Category
+      summary: Change Category Activity Status
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/categories/deleted:
+    get:
+      tags:
+        - Category
+      summary: Get All deleted Categories
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /category/restore/67718b1b1534fc03b79b874a:
+    put:
+      tags:
+        - Category
+      summary: restore Category
+      requestBody:
+        content: {}
+      security:
+        - noauthAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/company:
+    post:
+      tags:
+        - Company
+      summary: create company
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                companyName: XYZA Company
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /companies:
+    get:
+      tags:
+        - Company
+      summary: Get All company
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/company/6772add5e6d9ec5db56c3ae8:
+    get:
+      tags:
+        - Company
+      summary: Get  company By Id
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    put:
+      tags:
+        - Company
+      summary: 'Update company '
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                companyName: XYZA Company
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - Company
+      summary: 'Deleet company '
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/company/activity/6772add5e6d9ec5db56c3ae8:
+    patch:
+      tags:
+        - Company
+      summary: Change Company Activity Status
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                companyName: XYZA Company
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/companies/deletd:
+    get:
+      tags:
+        - Company
+      summary: Get All  deletd company
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /createblog:
+    post:
+      tags:
+        - Blog
+      summary: create Blog
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: test for a create blog 5thtesting
+                description:
+                  type: string
+                  example: >-
+                    testing chal rha h create krne kr liye hjcbedsjkcb 4th
+                    testing
+                categoryId:
+                  type: string
+                  example: 6772a331d5d4a36bb11a066c
+                companyId:
+                  type: string
+                  example: 6772adc2e6d9ec5db56c3ae4
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /blogs:
+    get:
+      tags:
+        - Blog
+      summary: Get All Blogs
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /publicblogs:
+    get:
+      tags:
+        - Blog
+      summary: Get All Public Blog For Website
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /deletedblogs:
+    get:
+      tags:
+        - Blog
+      summary: Get All Deleted Blogs
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /blogs/677cc606de8d6a779e68c9e0:
+    get:
+      tags:
+        - Blog
+      summary: Get Blog By Id
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /blogs/677cc6b378159e949b63bb81:
+    delete:
+      tags:
+        - Blog
+      summary: delete Blog
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    put:
+      tags:
+        - Blog
+      summary: update Blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                title: test for update Api
+                description: test chal rha h upadTE HOTA H KI NAHI
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  //blog/restore/677cc6b378159e949b63bb81:
+    put:
+      tags:
+        - Blog
+      summary: restore Blog
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /admin/public/677cc65cde8d6a779e68c9e7:
+    put:
+      tags:
+        - Blog
+      summary: 'update Ispublic status '
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /blog/views/677cc606de8d6a779e68c9e0:
+    put:
+      tags:
+        - Blog
+      summary: update Blog views count
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /subtitles/677b9bfc23609646b28b6cf3:
+    post:
+      tags:
+        - Subtitle
+      summary: Add Subtitles
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: 'test for image '
+                description:
+                  type: string
+                  example: test for image upload to subtitle
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/addfaq/675822bd4d25bd3f293ff04b:
+    post:
+      tags:
+        - Subtitle
+      summary: 'Add FAQ '
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                indexNo: 4
+                question: what is your his Name
+                answer: My is Abhi
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /subtitles:
+    get:
+      tags:
+        - Subtitle
+      summary: Get All subtitles
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /subtitles/677cc879678ceee5a4a4f381:
+    get:
+      tags:
+        - Subtitle
+      summary: Get Subtitle By Id
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /deletedsubtitles:
+    get:
+      tags:
+        - Subtitle
+      summary: Get All Deleted Subtitle
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /updateSubtitle:
+    put:
+      tags:
+        - Subtitle
+      summary: update Subtitle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                title: update Suptitle 2nd test
+      parameters:
+        - name: blogId
+          in: query
+          schema:
+            type: string
+          example: 677cc606de8d6a779e68c9e0
+        - name: subtitleId
+          in: query
+          schema:
+            type: string
+          example: 677cc875678ceee5a4a4f37c
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /subtitles/677cc875678ceee5a4a4f37c:
+    delete:
+      tags:
+        - Subtitle
+      summary: delete Subtitle
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  //Subtitle/restore/677cc875678ceee5a4a4f37c:
+    put:
+      tags:
+        - Subtitle
+      summary: restore Subtitle
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /me/update:
+    put:
+      tags:
+        - user
+      summary: update user profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: abhirock123
+                password: Test@12345
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /admin/restore/677bbb50198e6f5f09053110:
+    put:
+      tags:
+        - user
+      summary: user restore
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /activity/677bbb50198e6f5f09053110:
+    put:
+      tags:
+        - user
+      summary: 'update user activity '
+      description: user cant update activity not require admin authorised
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /resetpassword:
+    post:
+      tags:
+        - user
+      summary: resetpassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                password: ''
+                newpassword: ''
+      security:
+        - noauthAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /admin/allusers:
+    get:
+      tags:
+        - default
+      summary: Get All User
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/deletedusers:
+    get:
+      tags:
+        - default
+      summary: Get All deletd User
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /register:
+    post:
+      tags:
+        - default
+      summary: register
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: abhi
+                email:
+                  type: string
+                  example: abhi@gmail.com
+                number:
+                  type: integer
+                  example: '9708712422'
+                file:
+                  type: string
+                  format: binary
+                username:
+                  type: string
+                  example: abhi123
+                roleId:
+                  type: string
+                  example: 6770f32a7fc6d7918623ea16
+                companyId:
+                  type: string
+                  example: 6772ad93e6d9ec5db56c3ae0
+                password:
+                  type: string
+                  example: Test@1234
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/login:
+    post:
+      tags:
+        - default
+      summary: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: raz@gmail.com
+                password: Test@1234
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/logout:
+    get:
+      tags:
+        - default
+      summary: logout
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/me:
+    get:
+      tags:
+        - default
+      summary: Get Profile
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/user/677bbb50198e6f5f09053110:
+    put:
+      tags:
+        - default
+      summary: user verification update
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/view/6753e16f7c5ff3da17a079cc:
+    put:
+      tags:
+        - default
+      summary: user isview update (private || public)
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/block/677380f31553724732f5dd74:
+    put:
+      tags:
+        - default
+      summary: user Block Conformation
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/admin/user/67737f4b3007ede2faf18a68:
+    delete:
+      tags:
+        - default
+      summary: Delete user
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/deletesubtitle:
+    delete:
+      tags:
+        - default
+      summary: Delete Subtitle
+      parameters:
+        - name: blogId
+          in: query
+          schema:
+            type: string
+          example: 6763b34fd4963cbe8ceeca32
+        - name: subtitleId
+          in: query
+          schema:
+            type: string
+          example: 6763b3aed4963cbe8ceecb4a
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
