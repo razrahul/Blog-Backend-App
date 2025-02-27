@@ -20,8 +20,8 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
 servers:
-  - url: https://blog-backend-app-e6si.onrender.com
-  # - url: 5000/pai/v1
+  # - url: https://blog-backend-app-e6si.onrender.com
+  # - url: 5000/avi/v1
     description: Development server
 components:
   securitySchemes:

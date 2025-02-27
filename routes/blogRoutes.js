@@ -39,7 +39,7 @@ router
 router.route("/blogs/:id").get(getBlogById);
 
 //Update Blog
-router.route("/blogs/:id").put(isAuthenticated, updateBlog);
+router.route("/blogs/:id").put(isAuthenticated, singleUpload, updateBlog);
 
 //Delete Blog
 router.route("/blogs/:id").delete(isAuthenticated, authorizeAdmin, deleteBlog);
