@@ -13,6 +13,7 @@ import {
   getAllPublicBlogs,
   restoreBlog,
   updateBlogViews,
+  getAllBlogsByCategoryId,
 } from "../controllers/blogController.js";
 import { isAuthenticated, authorizeAdmin } from "../middlewares/auth.js";
 
@@ -29,6 +30,9 @@ router.route("/blogs").get(isAuthenticated, getAllBlogs);
 
 //Get All Public Blogs for website
 router.route("/publicblogs").get(getAllPublicBlogs);
+
+//get All public Blogs by categoryId 
+router.route("/blogs/catId/:id").get(getAllBlogsByCategoryId);
 
 //Get All deleted Blogs
 router

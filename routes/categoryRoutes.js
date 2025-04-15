@@ -1,5 +1,5 @@
 import express from 'express';
-import { createCategory, getAllCategories, getCategoryById, updateCategory, deleteCategory, changeCategoryActivity, getAllDeletedCategories } from '../controllers/categoryController.js';
+import { createCategory, getAllCategories, getCategoryById, updateCategory, deleteCategory, changeCategoryActivity, getAllDeletedCategories, getAllPublicCategories } from '../controllers/categoryController.js';
 import { isAuthenticatedUser, isAuthenticated, authorizeAdmin, authorizeRoles } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -9,6 +9,9 @@ router.route('/category').post(isAuthenticated, createCategory);
 
 // Get All Categories
 router.route('/categories').get(isAuthenticated, getAllCategories);
+
+// Get All public Categories
+router.route('/categories/public').get( getAllPublicCategories);
 
 // Get All deleted Categories
 router.route('/categories/deleted').get(isAuthenticated, getAllDeletedCategories);

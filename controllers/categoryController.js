@@ -61,6 +61,18 @@ export const getAllCategories = catchAsyncError(async (req, res, next) => {
   });
 });
 
+//get All public Categories
+export const getAllPublicCategories = catchAsyncError(async (req, res, next) => {
+  const categories = await Category.find({ isdeleted: false, isactive: true }).sort({
+    name: 1,
+  });
+
+  res.status(200).json({
+    success: true,
+    categories,
+  });
+});
+
 // Get All deleted Categories
 export const getAllDeletedCategories = catchAsyncError(async (req, res, next) => {
   const categories = await Category.find({ isdeleted: true }).sort({
