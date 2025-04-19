@@ -93,6 +93,45 @@ export const getAllBlogs = catchAsyncError(async (req, res, next) => {
 
 // TODO: Get Public Blogs for website => Complated
 
+//get public blog by id
+export const getPublicBlogById = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
+  const blog = await Blog.findOne({ _id: id, isdelete: false, ispublic: true })
+    .select("-isdelete")
+    .populate({
+      path: "category",
+      select: "name",
+    })
+    .populate({
+      path: "company",
+      select: ["companyName", "companyId"],
+    })
+    .populate({
+      path: "createdBy",
+      select: "name",
+    })
+    .populate({
+      path: "Subtitle",
+      match: { isdelete: false }, // Filter subtitles where isdelete is false
+      select: ["-isdelete", "-__v"],
+      options: { sort: { createdAt: 1 } }, // Sort by createdAt in ascending order
+    });
+
+  if (!blog) {
+    return next(new ErrorHandler("Blog not found", 404));
+  }
+
+  // Increment views count
+  blog.views += 1;
+  await blog.save(); // Save the updated views count
+
+  res.status(200).json({
+    success: true,
+    message: "Blog successfully found",
+    blog,
+  });
+});
+
 // Get All  Public Blogs for website
 export const getAllPublicBlogs = catchAsyncError(async (req, res, next) => {
   const blogs = await Blog.find({ ispublic: true, isdelete: false })
@@ -131,10 +170,43 @@ export const getAllPublicBlogs = catchAsyncError(async (req, res, next) => {
   });
 });
 
-//get All blog by categoryId
-export const getAllBlogsByCategoryId = catchAsyncError(async (req, res, next) => {
+//get All public blog by companyId for website
+export const getAllPublicBlogsByCompanyId = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
-  const blogs = await Blog.find({ category: id, isdelete: false, ispublic: true })
+  const blogs = await Blog.find({ company: id, isdelete: false, ispublic: true })
+    .select("-isdelete")
+    .sort({ createdAt: -1 })
+    .populate({
+      path: "category",
+      select: "name",
+    })
+    .populate({
+      path: "company",
+      select: ["companyName", "companyId"],
+    })
+    .populate({
+      path: "createdBy",
+      select: "name",
+    })
+    .populate({
+      path: "Subtitle",
+      match: { isdelete: false }, // Filter subtitles where isdelete is false
+      select: ["-isdelete", "-__v"],
+      options: { sort: { createdAt: 1 } }, // Sort by createdAt in ascending order
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "All Public Blogs successfully found",
+      blogs,
+    });
+
+  })   
+
+//get All blog by categoryId
+export const getAllPublicBlogsByCategoryId = catchAsyncError(async (req, res, next) => {
+  const { comId, catId,  } = req.query;
+  const blogs = await Blog.find({ company:comId, category: catId, isdelete: false, ispublic: true })
     .select("-isdelete")
     .sort({ createdAt: -1 })
     .populate({
@@ -336,7 +408,7 @@ export const getBlogById = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
 
   // Find the blog and ensure it's not marked as deleted
-  const blog = await Blog.findOneAndUpdate(
+  const blog = await Blog.find(
     { _id: id, isdelete: false },
     { $inc: { views: 1 } }, // Increment the views count by 1
     { new: true } // Return the updated blog
