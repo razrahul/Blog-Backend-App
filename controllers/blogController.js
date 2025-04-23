@@ -4,6 +4,7 @@ import ErrorHandler from "../Utils/errorHandler.js";
 import getDataUri from "../Utils/dataUri.js";
 import { v2 as cloudinary } from "cloudinary";
 import { User } from "../models/user.models.js";
+import mongoose from "mongoose";
 
 // Create Blog
 export const createBlog = catchAsyncError(async (req, res, next) => {
@@ -172,70 +173,197 @@ export const getAllPublicBlogs = catchAsyncError(async (req, res, next) => {
 
 //get All public blog by companyId for website
 export const getAllPublicBlogsByCompanyId = catchAsyncError(async (req, res, next) => {
-  const { id } = req.params;
-  const blogs = await Blog.find({ company: id, isdelete: false, ispublic: true })
-    .select("-isdelete")
-    .sort({ createdAt: -1 })
-    .populate({
-      path: "category",
-      select: "name",
+    const { id } = req.params;
+    const blogs = await Blog.find({
+      company: id,
+      isdelete: false,
+      ispublic: true,
     })
-    .populate({
-      path: "company",
-      select: ["companyName", "companyId"],
-    })
-    .populate({
-      path: "createdBy",
-      select: "name",
-    })
-    .populate({
-      path: "Subtitle",
-      match: { isdelete: false }, // Filter subtitles where isdelete is false
-      select: ["-isdelete", "-__v"],
-      options: { sort: { createdAt: 1 } }, // Sort by createdAt in ascending order
-    });
+      .select("-isdelete")
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "category",
+        select: "name",
+      })
+      .populate({
+        path: "company",
+        select: ["companyName", "companyId"],
+      })
+      .populate({
+        path: "createdBy",
+        select: "name",
+      })
+      .populate({
+        path: "Subtitle",
+        match: { isdelete: false }, // Filter subtitles where isdelete is false
+        select: ["-isdelete", "-__v"],
+        options: { sort: { createdAt: 1 } }, // Sort by createdAt in ascending order
+      });
 
     res.status(200).json({
       success: true,
       message: "All Public Blogs successfully found",
       blogs,
     });
-
-  })   
+  }
+);
 
 //get All blog by categoryId
 export const getAllPublicBlogsByCategoryId = catchAsyncError(async (req, res, next) => {
-  const { comId, catId,  } = req.query;
-  const blogs = await Blog.find({ company:comId, category: catId, isdelete: false, ispublic: true })
-    .select("-isdelete")
-    .sort({ createdAt: -1 })
-    .populate({
-      path: "category",
-      select: "name",
+    const { comId, catId } = req.query;
+    const blogs = await Blog.find({
+      company: comId,
+      category: catId,
+      isdelete: false,
+      ispublic: true,
     })
-    .populate({
-      path: "company",
-      select: ["companyName", "companyId"],
-    })
-    .populate({
-      path: "createdBy",
-      select: "name",
-    })
-    .populate({
-      path: "Subtitle",
-      match: { isdelete: false }, // Filter subtitles where isdelete is false
-      select: ["-isdelete", "-__v"],
-      options: { sort: { createdAt: 1 } }, // Sort by createdAt in ascending order
-    });
+      .select("-isdelete")
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "category",
+        select: "name",
+      })
+      .populate({
+        path: "company",
+        select: ["companyName", "companyId"],
+      })
+      .populate({
+        path: "createdBy",
+        select: "name",
+      })
+      .populate({
+        path: "Subtitle",
+        match: { isdelete: false }, // Filter subtitles where isdelete is false
+        select: ["-isdelete", "-__v"],
+        options: { sort: { createdAt: 1 } }, // Sort by createdAt in ascending order
+      });
 
     res.status(200).json({
       success: true,
       message: "All Public Blogs successfully found",
       blogs,
     });
-    
-});
+  }
+);
 
+//get public blog by companyId and scearch by title and company name
+export const getPublicBlogByCompanyIdAndTitle = catchAsyncError(async (req, res, next) => {
+    const { id } = req.params;
+    const { text } = req.body;
+
+    const blogs = await Blog.aggregate([
+      {
+        $match: {
+          company: new mongoose.Types.ObjectId(id),
+          isdelete: false,
+          ispublic: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      {
+        $unwind: "$category",
+      },
+      {
+        $lookup: {
+          from: "companies",
+          localField: "company",
+          foreignField: "_id",
+          as: "company",
+        },
+      },
+      {
+        $unwind: "$company",
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "createdBy",
+        },
+      },
+      {
+        $unwind: "$createdBy",
+      },
+      {
+        $lookup: {
+          from: "subtitles",
+          let: { blogId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$blog", "$$blogId"] },
+                    { $eq: ["$isdelete", false] },
+                  ],
+                },
+              },
+            },
+            { $sort: { createdAt: 1 } },
+            { $project: { isdelete: 0, __v: 0 } },
+          ],
+          as: "Subtitle",
+        },
+      },
+      {
+        $match: {
+          $or: [
+            { title: { $regex: text, $options: "i" } },
+            { "category.name": { $regex: text, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $project: {
+          id: 1,
+          title: 1,
+          poster: 1,
+          description: 1,
+          views: 1,
+          numOfSubtitles: 1,
+          ispublic: 1,
+          isactive: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          Subtitle: 1, // If you want to restrict this too, we can customize it
+          category: {
+            _id: 1,
+            name: 1,
+          },
+          company: {
+            _id: 1,
+            companyName: 1,
+            companyId: 1,
+          },
+          createdBy: {
+            _id: 1,
+            name: 1,
+          },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "All Public Blogs successfully found",
+      blogs,
+    });
+  }
+);
 
 //Get All Blogs for only public
 // export const getAllBlogs = catchAsyncError(async (req, res, next) => {
@@ -528,8 +656,9 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
     });
 
   if (!updatedBlog) {
-    return next(new ErrorHandler("Failed to update blog || Somrthings Went Worng", 500));
-    
+    return next(
+      new ErrorHandler("Failed to update blog || Somrthings Went Worng", 500)
+    );
   }
 
   res.status(200).json({

@@ -16,6 +16,7 @@ import {
   getAllPublicBlogsByCategoryId,
   getAllPublicBlogsByCompanyId,
   getPublicBlogById,
+  getPublicBlogByCompanyIdAndTitle,
 } from "../controllers/blogController.js";
 import { isAuthenticated, authorizeAdmin } from "../middlewares/auth.js";
 
@@ -43,6 +44,9 @@ router.route("/publicblogs/com/:id").get(getAllPublicBlogsByCompanyId);
 // router.route("/blogs/catId/:id").get(getAllBlogsByCategoryId);
 //get All public Blogs by companyId and categoryId
 router.route("/publicblogs/comId/catId").get(getAllPublicBlogsByCategoryId);
+
+//get public blog by companyId and search by  title and category name
+router.route("/publicblogs/comId/search/:id").post(getPublicBlogByCompanyIdAndTitle);
 
 //Get All deleted Blogs
 router
