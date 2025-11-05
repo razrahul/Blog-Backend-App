@@ -62,33 +62,57 @@ export const createBlog = catchAsyncError(async (req, res, next) => {
 });
 
 //Get All Blogs
-export const getAllBlogs = catchAsyncError(async (req, res, next) => {
-  const blogs = await Blog.find({ isdelete: false })
-    .select("-isdelete")
-    .sort({ createdAt: -1 })
-    .populate({
-      path: "category",
-      select: "name",
-    })
-    .populate({
-      path: "company",
-      select: ["companyName", "companyId"],
-    })
-    .populate({
-      path: "createdBy",
-      select: "name",
-    })
-    .populate({
-      path: "Subtitle",
-      match: { isdelete: false }, // Filter subtitles where isdelete is false
-      select: ["-isdelete", "-__v"],
-      options: { sort: { createdAt: 1 } }, // Sort by createdAt in ascending order
-    });
+export const getAllBlogs = catchAsyncError(async (req, res) => {
+  const {
+    page = 1,
+    limit = 9,
+    companyId,
+    categoryId,
+    visibility, // 'public' | 'private'
+    search,     // matches in title
+  } = req.query;
+
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 9, 1), 100);
+  const skip = (pageNum - 1) * limitNum;
+
+  const filter = { isdelete: false };
+
+  if (visibility === "public") filter.ispublic = true;
+  if (visibility === "private") filter.ispublic = false;
+
+  if (companyId) filter.company = companyId;
+  if (categoryId) filter.category = categoryId;
+
+  if (search) {
+    filter.title = { $regex: search, $options: "i" };
+  }
+
+  const [total, rows] = await Promise.all([
+    Blog.countDocuments(filter),
+    Blog.find(filter)
+      .select("-isdelete")
+      .sort({ createdAt: -1 }) // latest first
+      .skip(skip)
+      .limit(limitNum)
+      .populate({ path: "category", select: "name" })
+      .populate({ path: "company", select: ["companyName", "companyId"] })
+      .populate({ path: "createdBy", select: "name" })
+      .populate({
+        path: "Subtitle",
+        match: { isdelete: false },
+        select: ["-isdelete", "-__v"],
+        options: { sort: { createdAt: 1 } },
+      }),
+  ]);
 
   res.status(200).json({
     success: true,
-    message: "All Blogs successfully found",
-    blogs,
+    message: "Blogs fetched",
+    items: rows,
+    total,
+    page: pageNum,
+    totalPages: Math.ceil(total / limitNum),
   });
 });
 

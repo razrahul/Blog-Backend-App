@@ -107,7 +107,12 @@ export const getAllDeletedSubtitles = catchAsyncError(
 export const updateSubtitle = catchAsyncError(async (req, res, next) => {
   const { blogId, subtitleId } = req.query;
 
-  const { title, description } = req.body;
+  if (!blogId || !subtitleId) {
+    return next(new ErrorHandler("blogId and subtitleId are required", 400));
+  }
+  if (!req.user?._id) {
+    return next(new ErrorHandler("Unauthorized", 401));       
+  }
 
   const subtitle = await Subtitle.findOne({ _id: subtitleId, isdelete: false });
   if (!subtitle) return next(new ErrorHandler("Subtitle not found", 404));
@@ -115,51 +120,40 @@ export const updateSubtitle = catchAsyncError(async (req, res, next) => {
   const blog = await Blog.findOne({ _id: blogId, isdelete: false });
   if (!blog) return next(new ErrorHandler("Blog not found", 404));
 
-  // blog is public then cheack user role is SuperAdmin
+  // if blog is public, only SuperAdmin can update
   if (blog.ispublic) {
-    
-    // Fetch the current user and populate their role
-    const user = await User.findById(req.user._id).populate({
-      path: "role",
-      select: "name",
-    });
-
-    if (!user || !user.role) {
-      return next(new ErrorHandler("User role not found", 403));
-    }
-
-    // Restrict updates for public blogs if the user is not a SuperAdmin
+    const user = await User.findById(req.user._id).populate({ path: "role", select: "name" });
+    if (!user?.role?.name) return next(new ErrorHandler("User role not found", 403));
     if (user.role.name !== "SuperAdmin") {
       return next(new ErrorHandler("You cannot update a public blog", 403));
     }
   }
 
-  if (title) subtitle.title = title;
-  if (description) subtitle.description = description;
+  // Partial updates
+  const { title, description } = req.body || {};
+  if (title != null) subtitle.title = title;
+  if (description != null) subtitle.description = description;
 
+  // Optional file (use optional chaining for safety)
   if (req.file) {
-    if (subtitle.poster.public_id) {
-      await cloudinary.uploader.destroy(subtitle.poster.public_id);
+    if (subtitle.poster?.public_id) {
+      await cloudinary.uploader.destroy(subtitle.poster.public_id).catch(() => {});
     }
-
-    const fileUri = getDataUri(req.file);
+    const fileUri = getDataUri(req.file); // ensure multer memoryStorage is used
     const myCloud = await cloudinary.uploader.upload(fileUri.content);
-    subtitle.poster = {
-      public_id: myCloud.public_id,
-      url: myCloud.secure_url,
-    };
+    subtitle.poster = { public_id: myCloud.public_id, url: myCloud.secure_url };
   }
 
   subtitle.updatedBy = req.user._id;
-
   await subtitle.save();
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Subtitle updated successfully",
-    subtitle,
+    subtitle, // <-- client should use data.subtitle
   });
 });
+
 
 // Delete Subtitle
 export const deleteSubtitle = catchAsyncError(async (req, res, next) => {

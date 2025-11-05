@@ -37,7 +37,7 @@ export const authorizeAdmin = async (req, res, next) => {
   //   );
 
   const user = await User.findOne({
-    $and: [{ _id: req.user._id }, { isactive: true }],
+    $and: [{ _id: req.user?._id }, { isactive: true }],
   })
     .populate({
       path: "role",
