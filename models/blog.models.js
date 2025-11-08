@@ -43,6 +43,7 @@ const schema = new mongoose.Schema(
     views: {
       type: Number,
       default: 0,
+      min: 0,
     },
     numOfSubtitles: {
       type: Number,
@@ -76,5 +77,14 @@ const schema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// keep subtitle count accurate
+schema.pre("save", function (next) {
+  if (this.Subtitle) this.numOfSubtitles = this.Subtitle.length;
+  next();
+});
+
+// 🚀 optimize pagination query
+schema.index({ company: 1, isdelete: 1, ispublic: 1, createdAt: -1 });
 
 export const Blog = mongoose.model("Blog", schema);

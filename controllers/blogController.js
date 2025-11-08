@@ -232,6 +232,54 @@ export const getAllPublicBlogsByCompanyId = catchAsyncError(async (req, res, nex
   }
 );
 
+// GET /companies/:id/blogs/public?page=1  {pagenation applyed 10 blogs each page}
+export const getAllPublicBlogsByCompanyIdLimited = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;              // companyId
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1); // page from query
+  const limit = 10;                        // fixed 10 per page
+  const skip = (page - 1) * limit;
+
+  const filter = { company: id, isdelete: false, ispublic: true };
+
+  const [blogs, total] = await Promise.all([
+    Blog.find(filter)
+      .select("-isdelete")
+      .sort({ createdAt: -1 }) // latest first
+      .skip(skip)
+      .limit(limit)
+      .populate({ path: "category", select: "name" })
+      .populate({ path: "company", select: ["companyName", "companyId"] })
+      .populate({ path: "createdBy", select: "name" })
+      .populate({
+        path: "Subtitle",
+        match: { isdelete: false },
+        select: ["-isdelete", "-__v"],
+        options: { sort: { createdAt: 1 } },
+      })
+      .lean(),
+    Blog.countDocuments(filter),
+  ]);
+
+  const totalPages = Math.max(Math.ceil(total / limit), 1);
+
+  return res.status(200).json({
+    success: true,
+    message: "All Public Blogs successfully found",
+    // 👉 blogs format SAME as before
+    blogs,
+    // 👉 extra (optional) meta for frontend pagination
+    pagination: {
+      page,
+      perPage: limit,
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    },
+  });
+});
+
+
 //get All blog by categoryId
 export const getAllPublicBlogsByCategoryId = catchAsyncError(async (req, res, next) => {
     const { comId, catId } = req.query;

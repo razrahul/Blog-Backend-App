@@ -17,6 +17,7 @@ import {
   getAllPublicBlogsByCompanyId,
   getPublicBlogById,
   getPublicBlogByCompanyIdAndTitle,
+  getAllPublicBlogsByCompanyIdLimited,
 } from "../controllers/blogController.js";
 import { isAuthenticated, authorizeAdmin } from "../middlewares/auth.js";
 
@@ -39,6 +40,9 @@ router.route("/publicblogs/:id").get(getPublicBlogById);
 
 //get All Public Blogs by companyId
 router.route("/publicblogs/com/:id").get(getAllPublicBlogsByCompanyId);
+
+//get All Public Blogs by companyId limited for homepage {pagenation applyed 10 blogs each page}
+router.route("/publicblogs/com/limited/:id").get(getAllPublicBlogsByCompanyIdLimited);
 
 //get All public Blogs by categoryId 
 // router.route("/blogs/catId/:id").get(getAllBlogsByCategoryId);
