@@ -234,12 +234,13 @@ export const getAllPublicBlogsByCompanyId = catchAsyncError(async (req, res, nex
 
 // GET /companies/:id/blogs/public?page=1  {pagenation applyed 10 blogs each page}
 export const getAllPublicBlogsByCompanyIdLimited = catchAsyncError(async (req, res, next) => {
-  const { id } = req.params;              // companyId
+  const { id } = req.params; // companyId (optional later)
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1); // page from query
-  const limit = 10;                        // fixed 10 per page
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50); // limit from query (default 10)
   const skip = (page - 1) * limit;
 
-  const filter = { company: id, isdelete: false, ispublic: true };
+  const filter = { isdelete: false, ispublic: true };
+  if (id) filter.company = id; // optional filter if companyId exists
 
   const [blogs, total] = await Promise.all([
     Blog.find(filter)
@@ -264,10 +265,10 @@ export const getAllPublicBlogsByCompanyIdLimited = catchAsyncError(async (req, r
 
   return res.status(200).json({
     success: true,
-    message: "All Public Blogs successfully found",
-    // 👉 blogs format SAME as before
+    message: id
+      ? "All Public Blogs successfully found for the company"
+      : "All Public Blogs successfully found across companies",
     blogs,
-    // 👉 extra (optional) meta for frontend pagination
     pagination: {
       page,
       perPage: limit,
@@ -278,6 +279,7 @@ export const getAllPublicBlogsByCompanyIdLimited = catchAsyncError(async (req, r
     },
   });
 });
+
 
 
 //get All blog by categoryId
