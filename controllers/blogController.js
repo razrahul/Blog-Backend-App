@@ -281,6 +281,76 @@ export const getAllPublicBlogsByCompanyIdLimited = catchAsyncError(async (req, r
 });
 
 
+// GET /publicblogs/:id/navigation?companyId=...   (companyId optional)
+export const getBlogWithNeighbors = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params; // blog id
+  const { companyId } = req.query; // optional filter: only consider blogs of this company
+  const baseFilter = { isdelete: false, ispublic: true };
+  if (companyId) baseFilter.company = companyId;
+
+  // shared populate chain function for consistency
+  const applyPopulates = (query) =>
+    query
+      .select("-isdelete")
+      .populate({ path: "category", select: "name" })
+      .populate({ path: "company", select: ["companyName", "companyId"] })
+      .populate({ path: "createdBy", select: "name" })
+      .populate({
+        path: "Subtitle",
+        match: { isdelete: false },
+        select: ["-isdelete", "-__v"],
+        options: { sort: { createdAt: 1 } },
+      })
+      .lean();
+
+  // 1) Find the current blog (must respect baseFilter)
+  const blog = await applyPopulates(Blog.findOne({ _id: id, ...baseFilter }));
+
+  if (!blog) {
+    return res.status(404).json({ success: false, message: "Blog not found" });
+  }
+
+  // 2) Build neighbor queries with tie-breaker on _id
+  // Next -> nearest newer (createdAt > blog.createdAt) OR same createdAt but _id > blog._id
+  const nextFilter = {
+    ...baseFilter,
+    $or: [
+      { createdAt: { $gt: blog.createdAt } },
+      { createdAt: blog.createdAt, _id: { $gt: blog._id } },
+    ],
+  };
+
+  // Prev -> nearest older (createdAt < blog.createdAt) OR same createdAt but _id < blog._id
+  const prevFilter = {
+    ...baseFilter,
+    $or: [
+      { createdAt: { $lt: blog.createdAt } },
+      { createdAt: blog.createdAt, _id: { $lt: blog._id } },
+    ],
+  };
+
+  // 3) Query neighbors and return them with the same populated/full structure
+  const [nextDoc, prevDoc] = await Promise.all([
+    applyPopulates(
+      Blog.findOne(nextFilter).sort({ createdAt: 1, _id: 1 }) // nearest newer: smallest greater
+    ),
+    applyPopulates(
+      Blog.findOne(prevFilter).sort({ createdAt: -1, _id: -1 }) // nearest older: largest smaller
+    ),
+  ]);
+
+  return res.status(200).json({
+    success: true,
+    meessage: "Blog with neighbors fetched successfully",
+    blog,                 // full blog (same structure)
+    next: nextDoc || null, // full blog object or null
+    prev: prevDoc || null, // full blog object or null
+  });
+});
+
+
+
+
 
 //get All blog by categoryId
 export const getAllPublicBlogsByCategoryId = catchAsyncError(async (req, res, next) => {
