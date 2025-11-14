@@ -19,6 +19,7 @@ import {
   getPublicBlogByCompanyIdAndTitle,
   getAllPublicBlogsByCompanyIdLimited,
   getBlogWithNeighbors,
+  searchBlogsByTitle,
 } from "../controllers/blogController.js";
 import { isAuthenticated, authorizeAdmin } from "../middlewares/auth.js";
 
@@ -32,6 +33,10 @@ router.route("/createblog").post(isAuthenticated, singleUpload, createBlog);
 
 //GEt All Blogs
 router.route("/blogs").get(isAuthenticated, getAllBlogs);
+
+// GET /publicblogs/search?q=Digital&page=1
+// or POST /publicblogs/search  with JSON body { q: "Digital" }  (query preferred)
+router.get("/publicblogs/search", searchBlogsByTitle);
 
 //Get All Public Blogs for website
 router.route("/publicblogs").get(getAllPublicBlogs);

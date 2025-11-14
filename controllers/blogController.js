@@ -349,6 +349,153 @@ export const getBlogWithNeighbors = catchAsyncError(async (req, res, next) => {
 });
 
 
+// escape regex to prevent injection
+const escapeRegex = (str = "") => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// GET /publicblogs/search?q=...&companyId=...&page=1&limit=2&totalCap=10
+export const searchBlogsByTitle = catchAsyncError(async (req, res, next) => {
+  const qRaw = (req.query.q || req.body?.q || "").trim();
+  const q = qRaw;
+  const { companyId } = req.query;
+
+  // require minimum 4 chars
+  if (!q || q.length < 4) {
+    return next(new ErrorHandler("Search query must be at least 4 characters", 400));
+  }
+
+  // pagination params from query
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const perPage = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 10); // default 10, max 10
+
+  // TOTAL CAP from query (optional) with safety bounds
+  const MAX_CAP = 100; // absolute upper bound (changeable)
+  const requestedCap = parseInt(req.query.totalCap, 10);
+  let TOTAL_CAP = 10; // default
+
+  if (!isNaN(requestedCap) && requestedCap > 0) {
+    TOTAL_CAP = Math.min(requestedCap, MAX_CAP);
+  }
+
+  // compute skip from requested page
+  const skipFromStart = (page - 1) * perPage;
+
+  // if the requested skip is already beyond the cap, return empty without DB call
+  if (skipFromStart >= TOTAL_CAP) {
+    const total = TOTAL_CAP;
+    const totalPages = Math.max(Math.ceil(total / perPage), 1);
+    return res.status(200).json({
+      success: true,
+      message: `Found 0 blogs matching "${q}" for page ${page}`,
+      blogs: [],
+      pagination: {
+        page,
+        perPage,
+        total,
+        totalPages,
+        hasNext: false,
+        hasPrev: page > 1,
+      },
+    });
+  }
+
+  // effective limit: don't let DB return items beyond cap
+  const effectiveLimit = Math.min(perPage, TOTAL_CAP - skipFromStart);
+  const effectiveSkip = skipFromStart;
+
+  // build match filter
+  const filter = { ispublic: true, isdelete: false };
+  if (companyId && mongoose.Types.ObjectId.isValid(companyId)) {
+    filter.company = new mongoose.Types.ObjectId(companyId);
+  }
+  const safe = escapeRegex(q);
+  filter.title = { $regex: safe, $options: "i" };
+
+  // aggregation pipeline with facet:
+  const pipeline = [
+    { $match: filter },
+    { $sort: { createdAt: -1 } },
+    {
+      $facet: {
+        docs: [
+          { $skip: effectiveSkip },
+          { $limit: effectiveLimit },
+          {
+            $lookup: {
+              from: "categories",
+              localField: "category",
+              foreignField: "_id",
+              as: "category",
+            },
+          },
+          { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+          {
+            $lookup: {
+              from: "companies",
+              localField: "company",
+              foreignField: "_id",
+              as: "company",
+            },
+          },
+          { $unwind: { path: "$company", preserveNullAndEmptyArrays: true } },
+          {
+            $lookup: {
+              from: "users",
+              localField: "createdBy",
+              foreignField: "_id",
+              as: "createdBy",
+            },
+          },
+          { $unwind: { path: "$createdBy", preserveNullAndEmptyArrays: true } },
+          {
+            $lookup: {
+              from: "subtitles",
+              let: { subs: "$Subtitle" },
+              pipeline: [
+                { $match: { $expr: { $and: [{ $in: ["$_id", "$$subs"] }, { $eq: ["$isdelete", false] }] } } },
+                { $sort: { createdAt: 1 } },
+                { $project: { isdelete: 0, __v: 0 } },
+              ],
+              as: "Subtitle",
+            },
+          },
+          {
+            $project: {
+              isdelete: 0,
+              __v: 0,
+            },
+          },
+        ],
+        totalCount: [{ $count: "count" }],
+      },
+    },
+  ];
+
+  const aggResult = await Blog.aggregate(pipeline).allowDiskUse(true);
+  const facetResult = aggResult[0] || { docs: [], totalCount: [] };
+  const docs = facetResult.docs || [];
+  const actualCount = (facetResult.totalCount[0] && facetResult.totalCount[0].count) || 0;
+
+  // apply cap (TOTAL_CAP may be from query)
+  const total = Math.min(actualCount, TOTAL_CAP);
+  const totalPages = Math.max(Math.ceil(total / perPage), 1);
+
+  return res.status(200).json({
+    success: true,
+    message: `Found ${docs.length} blogs matching "${q}" (page ${page})`,
+    blogs: docs,
+    pagination: {
+      page,
+      perPage,
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    },
+  });
+});
+
+
+
 
 
 
