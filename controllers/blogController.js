@@ -10,8 +10,15 @@ import mongoose from "mongoose";
 export const createBlog = catchAsyncError(async (req, res, next) => {
   const { title, description, categoryId, companyId } = req.body;
 
-  if (!title || !description || !categoryId || !companyId) {
+  if (!title || !description || !companyId) {
     return next(new ErrorHandler("Please fill all the fields", 400));
+  }
+
+  // console.log(req.body.categoryId, Array.isArray(req.body.categoryId));
+
+  // STRICT: category must be array
+  if (!Array.isArray(categoryId) || categoryId.length === 0) {
+    return next(new ErrorHandler("Please select at least one category", 400));
   }
 
   const file = req.file;
@@ -27,7 +34,7 @@ export const createBlog = catchAsyncError(async (req, res, next) => {
   const blog = await Blog.create({
     title,
     description,
-    category: categoryId,
+    category: categoryId, // array of category IDs
     company: companyId,
     createdBy: req.user._id,
     poster: {
@@ -69,7 +76,7 @@ export const getAllBlogs = catchAsyncError(async (req, res) => {
     companyId,
     categoryId,
     visibility, // 'public' | 'private'
-    search,     // matches in title
+    search, // matches in title
   } = req.query;
 
   const pageNum = Math.max(parseInt(page, 10) || 1, 1);
@@ -196,7 +203,8 @@ export const getAllPublicBlogs = catchAsyncError(async (req, res, next) => {
 });
 
 //get All public blog by companyId for website
-export const getAllPublicBlogsByCompanyId = catchAsyncError(async (req, res, next) => {
+export const getAllPublicBlogsByCompanyId = catchAsyncError(
+  async (req, res, next) => {
     const { id } = req.params;
     const blogs = await Blog.find({
       company: id,
@@ -233,53 +241,57 @@ export const getAllPublicBlogsByCompanyId = catchAsyncError(async (req, res, nex
 );
 
 // GET /companies/:id/blogs/public?page=1  {pagenation applyed 10 blogs each page}
-export const getAllPublicBlogsByCompanyIdLimited = catchAsyncError(async (req, res, next) => {
-  const { id } = req.params; // companyId (optional later)
-  const page = Math.max(parseInt(req.query.page, 10) || 1, 1); // page from query
-  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50); // limit from query (default 10)
-  const skip = (page - 1) * limit;
+export const getAllPublicBlogsByCompanyIdLimited = catchAsyncError(
+  async (req, res, next) => {
+    const { id } = req.params; // companyId (optional later)
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1); // page from query
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit, 10) || 10, 1),
+      50
+    ); // limit from query (default 10)
+    const skip = (page - 1) * limit;
 
-  const filter = { isdelete: false, ispublic: true };
-  if (id) filter.company = id; // optional filter if companyId exists
+    const filter = { isdelete: false, ispublic: true };
+    if (id) filter.company = id; // optional filter if companyId exists
 
-  const [blogs, total] = await Promise.all([
-    Blog.find(filter)
-      .select("-isdelete")
-      .sort({ createdAt: -1 }) // latest first
-      .skip(skip)
-      .limit(limit)
-      .populate({ path: "category", select: "name" })
-      .populate({ path: "company", select: ["companyName", "companyId"] })
-      .populate({ path: "createdBy", select: "name" })
-      .populate({
-        path: "Subtitle",
-        match: { isdelete: false },
-        select: ["-isdelete", "-__v"],
-        options: { sort: { createdAt: 1 } },
-      })
-      .lean(),
-    Blog.countDocuments(filter),
-  ]);
+    const [blogs, total] = await Promise.all([
+      Blog.find(filter)
+        .select("-isdelete")
+        .sort({ createdAt: -1 }) // latest first
+        .skip(skip)
+        .limit(limit)
+        .populate({ path: "category", select: "name" })
+        .populate({ path: "company", select: ["companyName", "companyId"] })
+        .populate({ path: "createdBy", select: "name" })
+        .populate({
+          path: "Subtitle",
+          match: { isdelete: false },
+          select: ["-isdelete", "-__v"],
+          options: { sort: { createdAt: 1 } },
+        })
+        .lean(),
+      Blog.countDocuments(filter),
+    ]);
 
-  const totalPages = Math.max(Math.ceil(total / limit), 1);
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
 
-  return res.status(200).json({
-    success: true,
-    message: id
-      ? "All Public Blogs successfully found for the company"
-      : "All Public Blogs successfully found across companies",
-    blogs,
-    pagination: {
-      page,
-      perPage: limit,
-      total,
-      totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
-    },
-  });
-});
-
+    return res.status(200).json({
+      success: true,
+      message: id
+        ? "All Public Blogs successfully found for the company"
+        : "All Public Blogs successfully found across companies",
+      blogs,
+      pagination: {
+        page,
+        perPage: limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    });
+  }
+);
 
 // GET /publicblogs/:id/navigation?companyId=...   (companyId optional)
 export const getBlogWithNeighbors = catchAsyncError(async (req, res, next) => {
@@ -342,12 +354,11 @@ export const getBlogWithNeighbors = catchAsyncError(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     meessage: "Blog with neighbors fetched successfully",
-    blog,                 // full blog (same structure)
+    blog, // full blog (same structure)
     next: nextDoc || null, // full blog object or null
     prev: prevDoc || null, // full blog object or null
   });
 });
-
 
 // escape regex to prevent injection
 const escapeRegex = (str = "") => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -360,12 +371,17 @@ export const searchBlogsByTitle = catchAsyncError(async (req, res, next) => {
 
   // require minimum 4 chars
   if (!q || q.length < 4) {
-    return next(new ErrorHandler("Search query must be at least 4 characters", 400));
+    return next(
+      new ErrorHandler("Search query must be at least 4 characters", 400)
+    );
   }
 
   // pagination params from query
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-  const perPage = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 10); // default 10, max 10
+  const perPage = Math.min(
+    Math.max(parseInt(req.query.limit, 10) || 10, 1),
+    10
+  ); // default 10, max 10
 
   // TOTAL CAP from query (optional) with safety bounds
   const MAX_CAP = 100; // absolute upper bound (changeable)
@@ -451,7 +467,16 @@ export const searchBlogsByTitle = catchAsyncError(async (req, res, next) => {
               from: "subtitles",
               let: { subs: "$Subtitle" },
               pipeline: [
-                { $match: { $expr: { $and: [{ $in: ["$_id", "$$subs"] }, { $eq: ["$isdelete", false] }] } } },
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        { $in: ["$_id", "$$subs"] },
+                        { $eq: ["$isdelete", false] },
+                      ],
+                    },
+                  },
+                },
                 { $sort: { createdAt: 1 } },
                 { $project: { isdelete: 0, __v: 0 } },
               ],
@@ -473,7 +498,8 @@ export const searchBlogsByTitle = catchAsyncError(async (req, res, next) => {
   const aggResult = await Blog.aggregate(pipeline).allowDiskUse(true);
   const facetResult = aggResult[0] || { docs: [], totalCount: [] };
   const docs = facetResult.docs || [];
-  const actualCount = (facetResult.totalCount[0] && facetResult.totalCount[0].count) || 0;
+  const actualCount =
+    (facetResult.totalCount[0] && facetResult.totalCount[0].count) || 0;
 
   // apply cap (TOTAL_CAP may be from query)
   const total = Math.min(actualCount, TOTAL_CAP);
@@ -494,13 +520,9 @@ export const searchBlogsByTitle = catchAsyncError(async (req, res, next) => {
   });
 });
 
-
-
-
-
-
 //get All blog by categoryId
-export const getAllPublicBlogsByCategoryId = catchAsyncError(async (req, res, next) => {
+export const getAllPublicBlogsByCategoryId = catchAsyncError(
+  async (req, res, next) => {
     const { comId, catId } = req.query;
     const blogs = await Blog.find({
       company: comId,
@@ -538,7 +560,8 @@ export const getAllPublicBlogsByCategoryId = catchAsyncError(async (req, res, ne
 );
 
 //get public blog by companyId and scearch by title and company name
-export const getPublicBlogByCompanyIdAndTitle = catchAsyncError(async (req, res, next) => {
+export const getPublicBlogByCompanyIdAndTitle = catchAsyncError(
+  async (req, res, next) => {
     const { id } = req.params;
     const { text } = req.body;
 
@@ -866,9 +889,11 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
   const { title, description, categoryId, companyId } = req.body;
 
+
   // Fetch the blog by ID
   const blog = await Blog.findOne({ _id: id, isdelete: false });
   if (!blog) return next(new ErrorHandler("Blog not found", 404));
+
 
   // Check if the blog is public then user role is SuperAdmin
   if (blog.ispublic) {
@@ -888,6 +913,7 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
     }
   }
 
+
   let mycloud = {
     public_id: blog.poster.public_id,
     url: blog.poster.url,
@@ -895,23 +921,45 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
 
   // If a new file is uploaded, process it via Cloudinary
   if (req.file) {
-    const fileUri = getDataUri(req.file);
-    if (blog.poster.public_id) {
-      await cloudinary.uploader.destroy(blog.poster.public_id); // Delete old poster
-    }
-    const cloud = await cloudinary.uploader.upload(fileUri.content); // Upload new poster
+    try {
+      const fileUri = getDataUri(req.file);
 
-    mycloud = {
-      public_id: cloud.public_id,
-      url: cloud.secure_url,
-    };
+      if (blog.poster?.public_id) {
+        await cloudinary.uploader.destroy(blog.poster.public_id);
+      }
+
+      const cloud = await cloudinary.uploader.upload(fileUri.content);
+
+      mycloud = {
+        public_id: cloud.public_id,
+        url: cloud.secure_url,
+      };
+    } catch (err) {
+      console.error("Cloudinary error:", err);
+      return next(
+        new ErrorHandler("Image upload failed. Please try again.", 500)
+      );
+    }
   }
+
 
   // Update the blog fields if they are provided
   if (title) blog.title = title;
   if (description) blog.description = description;
-  if (categoryId) blog.category = categoryId;
+  // if (categoryId) blog.category = categoryId;
   if (companyId) blog.company = companyId;
+
+  if (categoryId !== undefined) {
+    // normalize: string → array
+    const categories = Array.isArray(categoryId) ? categoryId : [categoryId];
+
+    if (categories.length === 0) {
+      return next(new ErrorHandler("Please select at least one category", 400));
+    }
+
+
+    blog.category = categories; // always array
+  }
 
   // Update the poster field
   blog.poster = {

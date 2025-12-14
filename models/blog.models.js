@@ -25,11 +25,10 @@ const schema = new mongoose.Schema(
       required: [true, "Please enter Blog title"],
       minLength: [20, "Title must be at least 20 characters"],
     },
-    category: {
+    category: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: true,
-    },
+    }],
     Subtitle: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -84,7 +83,32 @@ schema.pre("save", function (next) {
   next();
 });
 
+// --- BACKWARD COMPAT: if someone sends single id, coerce to array ---
+schema.pre("validate", function (next) {
+  if (this.isModified("category")) {
+    if (this.category && !Array.isArray(this.category)) {
+      this.category = [this.category];
+    }
+    if (Array.isArray(this.category)) {
+      this.category = this.category.filter((c) => c !== null && c !== undefined && c !== "");
+    }
+  }
+  next();
+});
+
+// --- STRICT VALIDATOR: ensure at least one category present ---
+schema.path("category").validate(function (val) {
+  return Array.isArray(val) && val.length > 0;
+}, "Please provide at least one category");
+
+// virtual for convenience (optional usage)
+schema.virtual("primaryCategory").get(function () {
+  if (!this.category) return null;
+  return Array.isArray(this.category) ? this.category[0] : this.category;
+});
+
 // 🚀 optimize pagination query
 schema.index({ company: 1, isdelete: 1, ispublic: 1, createdAt: -1 });
+schema.index({ category: 1 });
 
 export const Blog = mongoose.model("Blog", schema);
