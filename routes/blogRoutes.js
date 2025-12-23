@@ -20,6 +20,7 @@ import {
   getAllPublicBlogsByCompanyIdLimited,
   getBlogWithNeighbors,
   searchBlogsByTitle,
+  getMostViewedBlogs,
 } from "../controllers/blogController.js";
 import { isAuthenticated, authorizeAdmin } from "../middlewares/auth.js";
 
@@ -31,6 +32,10 @@ const router = express.Router();
 
 router.route("/createblog").post(isAuthenticated, singleUpload, createBlog);
 
+// ===== BLOG STATS (SABSE UPAR) =====
+router.put("/blog/views/:id", updateBlogViews);
+router.get("/blogs/mostviews", getMostViewedBlogs);
+
 //GEt All Blogs
 router.route("/blogs").get(isAuthenticated, getAllBlogs);
 
@@ -41,17 +46,20 @@ router.get("/publicblogs/search", searchBlogsByTitle);
 //Get All Public Blogs for website
 router.route("/publicblogs").get(getAllPublicBlogs);
 
-//get public blog by id
-router.route("/publicblogs/:id").get(getPublicBlogById);
-
-//get All Public Blogs by companyId
-router.route("/publicblogs/com/:id").get(getAllPublicBlogsByCompanyId);
 
 //get All Public Blogs by companyId limited for homepage {pagenation applyed 10 blogs each page}
 router.route("/publicblogs/com/limited/:id").get(getAllPublicBlogsByCompanyIdLimited);
 
+//get All Public Blogs by companyId
+router.route("/publicblogs/com/:id").get(getAllPublicBlogsByCompanyId);
+
+
+
 //// GET /publicblogs/:id/navigation?companyId=...   (companyId optional) to get blog with previous and next blogs
 router.route("/publicblogs/:id/navigation").get(getBlogWithNeighbors);
+
+//get public blog by id
+router.route("/publicblogs/:id").get(getPublicBlogById);
 
 //get All public Blogs by categoryId 
 // router.route("/blogs/catId/:id").get(getAllBlogsByCategoryId);
@@ -85,8 +93,7 @@ router
   .route("/blog/restore/:id")
   .put(isAuthenticated, authorizeAdmin, restoreBlog);
 
-// update Blog views
-router.route("/blog/views/:id").put(updateBlogViews);
+
 
 // //Add subtitle
 // router.route("/blogs/:id")
