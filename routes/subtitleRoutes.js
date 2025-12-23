@@ -6,12 +6,16 @@ import {
   updateSubtitle,
   deleteSubtitle,
   getAllDeletedSubtitles,
-  restoreSubtitle
+  restoreSubtitle,
+  redirectSubtitle,
 } from "../controllers/subtitleController.js";
 import { isAuthenticated, authorizeAdmin } from "../middlewares/auth.js";
 import singleUpload from "../middlewares/multer.js";
 
-const router = express.Router();
+const router = express.Router(); 
+
+// 🔁 Redirect (MUST be before :id)
+router.get("/subtitles/:id/redirect", redirectSubtitle);
 
 // create Subtitle
 router.route("/subtitles/:blogId").post(isAuthenticated, singleUpload, createSubtitle)

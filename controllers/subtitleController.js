@@ -9,7 +9,7 @@ import { v2 as cloudinary } from "cloudinary";
 // Create Subtitle
 export const createSubtitle = catchAsyncError(async (req, res, next) => {
   const { blogId } = req.params;
-  const { title, description } = req.body;
+  const { title, description, redirectUrl } = req.body;
 
   if (!title || !description) {
     return next(
@@ -23,6 +23,8 @@ export const createSubtitle = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Blog not found", 404));
   }
 
+  let finalRedirectUrl = null;
+
   let myCloud = { public_id: null, secure_url: null };
 
   // If a file is uploaded, process it
@@ -30,6 +32,16 @@ export const createSubtitle = catchAsyncError(async (req, res, next) => {
   if (file) {
     const fileUri = getDataUri(file);
     myCloud = await cloudinary.uploader.upload(fileUri.content);
+    finalRedirectUrl = redirectUrl || null;
+  } else {
+    if (redirectUrl) {
+      return next(
+        new ErrorHandler(
+          "Redirect URL cannot be set without a poster image",
+          400
+        )
+      );
+    }
   }
 
   // Create the subtitle
@@ -42,6 +54,7 @@ export const createSubtitle = catchAsyncError(async (req, res, next) => {
       public_id: myCloud.public_id,
       url: myCloud.secure_url,
     },
+    redirectUrl: finalRedirectUrl,
   });
 
   // Add the subtitle ID to the blog
@@ -111,7 +124,7 @@ export const updateSubtitle = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("blogId and subtitleId are required", 400));
   }
   if (!req.user?._id) {
-    return next(new ErrorHandler("Unauthorized", 401));       
+    return next(new ErrorHandler("Unauthorized", 401));
   }
 
   const subtitle = await Subtitle.findOne({ _id: subtitleId, isdelete: false });
@@ -122,26 +135,61 @@ export const updateSubtitle = catchAsyncError(async (req, res, next) => {
 
   // if blog is public, only SuperAdmin can update
   if (blog.ispublic) {
-    const user = await User.findById(req.user._id).populate({ path: "role", select: "name" });
-    if (!user?.role?.name) return next(new ErrorHandler("User role not found", 403));
+    const user = await User.findById(req.user._id).populate({
+      path: "role",
+      select: "name",
+    });
+    if (!user?.role?.name)
+      return next(new ErrorHandler("User role not found", 403));
     if (user.role.name !== "SuperAdmin") {
       return next(new ErrorHandler("You cannot update a public blog", 403));
     }
   }
 
   // Partial updates
-  const { title, description } = req.body || {};
+  const { title, description, redirectUrl } = req.body || {};
   if (title != null) subtitle.title = title;
   if (description != null) subtitle.description = description;
+  // ---- IMAGE UPDATE (FIRST) ----
+  let hasImage = Boolean(
+    subtitle.poster &&
+      subtitle.poster.url &&
+      typeof subtitle.poster.url === "string"
+  );
 
-  // Optional file (use optional chaining for safety)
   if (req.file) {
     if (subtitle.poster?.public_id) {
-      await cloudinary.uploader.destroy(subtitle.poster.public_id).catch(() => {});
+      await cloudinary.uploader
+        .destroy(subtitle.poster.public_id)
+        .catch(() => {});
     }
-    const fileUri = getDataUri(req.file); // ensure multer memoryStorage is used
+
+    const fileUri = getDataUri(req.file);
     const myCloud = await cloudinary.uploader.upload(fileUri.content);
-    subtitle.poster = { public_id: myCloud.public_id, url: myCloud.secure_url };
+
+    subtitle.poster = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    };
+
+    hasImage = true;
+  }
+
+  // ---- REDIRECT URL HANDLING ----
+  if (redirectUrl !== undefined) {
+    if (redirectUrl) {
+      if (!hasImage) {
+        return next(
+          new ErrorHandler(
+            "Redirect URL cannot be set without a poster image",
+            400
+          )
+        );
+      }
+      subtitle.redirectUrl = redirectUrl;
+    } else {
+      subtitle.redirectUrl = null;
+    }
   }
 
   subtitle.updatedBy = req.user._id;
@@ -153,7 +201,6 @@ export const updateSubtitle = catchAsyncError(async (req, res, next) => {
     subtitle, // <-- client should use data.subtitle
   });
 });
-
 
 // Delete Subtitle
 export const deleteSubtitle = catchAsyncError(async (req, res, next) => {
@@ -193,15 +240,38 @@ export const restoreSubtitle = catchAsyncError(async (req, res, next) => {
 
   await subtitle.save();
 
-  const restoreSubtitle = await Subtitle.findOne({ _id: subtitle._id, isdelete: false });
+  const restoreSubtitle = await Subtitle.findOne({
+    _id: subtitle._id,
+    isdelete: false,
+  });
 
-  if (!restoreSubtitle) return next(new ErrorHandler("Somthing Went Wrong", 500));
+  if (!restoreSubtitle)
+    return next(new ErrorHandler("Somthing Went Wrong", 500));
 
   res.status(200).json({
     success: true,
     message: "Subtitle restored successfully",
     subtitle: restoreSubtitle,
   });
+});
+
+export const redirectSubtitle = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
+
+  const subtitle = await Subtitle.findById(id).select(
+    "redirectUrl isactive isdelete"
+  );
+
+  if (!subtitle || subtitle.isdelete) {
+    return next(new ErrorHandler("Subtitle not found", 404));
+  }
+
+  if (!subtitle.redirectUrl) {
+    return next(new ErrorHandler("Redirect URL not configured", 400));
+  }
+
+  //then redirect
+  return res.redirect(302, subtitle.redirectUrl);
 });
 
 //Note: parmenet Delete Blog time delete in id from in blog model

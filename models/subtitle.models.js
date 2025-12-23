@@ -23,6 +23,21 @@ const schema = new mongoose.Schema(
         default: null,
       },
     },
+
+     // ✅ NEW FIELD
+    redirectUrl: {
+      type: String,
+      trim: true,
+      default: null,
+      validate: {
+        validator: function (v) {
+          // image hai tabhi URL allow karo
+          if (!this.poster?.url) return !v;
+          return /^https?:\/\//.test(v);
+        },
+        message: "Invalid redirect URL",
+      },
+    },
     blog: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Blog",
