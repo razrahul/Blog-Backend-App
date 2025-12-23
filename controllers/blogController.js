@@ -68,6 +68,41 @@ export const createBlog = catchAsyncError(async (req, res, next) => {
   });
 });
 
+
+//Get 5 most viewed blogs
+export const getMostViewedBlogs = catchAsyncError(async (req, res) => {
+  const blogs = await Blog.find({ispublic: true, isdelete: false})
+    .sort({
+      views: -1, // highest views first
+      createdAt: -1, // tie-breaker: latest blog
+    })
+    .limit(5)
+    .populate({ path: "category", select: "name" })
+    .populate({ path: "company", select: ["companyName", "companyId"] })
+    .populate({ path: "createdBy", select: "name" })
+    .populate({
+      path: "Subtitle",
+      match: { isdelete: false },
+      select: ["-isdelete", "-__v"],
+      options: { sort: { createdAt: 1 } },
+    })
+    .lean();
+
+  if (!blogs.length) {
+    return res.status(200).json({
+      success: true,
+      message: "No blogs found",
+      blogs: [],
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Most viewed blogs fetched",
+    blogs,
+  });
+});
+
 //Get All Blogs
 export const getAllBlogs = catchAsyncError(async (req, res) => {
   const {
@@ -850,7 +885,7 @@ export const getBlogById = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
 
   // Find the blog and ensure it's not marked as deleted
-  const blog = await Blog.find(
+  const blog = await Blog.findOneAndUpdate(
     { _id: id, isdelete: false },
     { $inc: { views: 1 } }, // Increment the views count by 1
     { new: true } // Return the updated blog
@@ -889,11 +924,9 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
   const { title, description, categoryId, companyId } = req.body;
 
-
   // Fetch the blog by ID
   const blog = await Blog.findOne({ _id: id, isdelete: false });
   if (!blog) return next(new ErrorHandler("Blog not found", 404));
-
 
   // Check if the blog is public then user role is SuperAdmin
   if (blog.ispublic) {
@@ -912,7 +945,6 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("You cannot update a public blog", 403));
     }
   }
-
 
   let mycloud = {
     public_id: blog.poster.public_id,
@@ -942,7 +974,6 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
     }
   }
 
-
   // Update the blog fields if they are provided
   if (title) blog.title = title;
   if (description) blog.description = description;
@@ -956,7 +987,6 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
     if (categories.length === 0) {
       return next(new ErrorHandler("Please select at least one category", 400));
     }
-
 
     blog.category = categories; // always array
   }
