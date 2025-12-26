@@ -69,14 +69,27 @@ export const createBlog = catchAsyncError(async (req, res, next) => {
 });
 
 
-//Get 5 most viewed blogs
+//Get  most viewed blogs  limit max 20
 export const getMostViewedBlogs = catchAsyncError(async (req, res) => {
-  const blogs = await Blog.find({ispublic: true, isdelete: false})
-    .sort({
-      views: -1, // highest views first
-      createdAt: -1, // tie-breaker: latest blog
-    })
-    .limit(5)
+    const { companyId } = req.query;
+
+    const limit = Math.min(
+      parseInt(req.query.limit, 10) || 5,
+      20 // max cap (safety)
+    );
+
+    const filter = {
+      ispublic: true,
+      isdelete: false,
+    };
+
+    if (companyId) {
+      filter.company = companyId;
+    }
+
+    const blogs = await Blog.find(filter)
+    .sort({ views: -1, createdAt: -1 })
+    .limit(limit)
     .populate({ path: "category", select: "name" })
     .populate({ path: "company", select: ["companyName", "companyId"] })
     .populate({ path: "createdBy", select: "name" })
@@ -88,20 +101,13 @@ export const getMostViewedBlogs = catchAsyncError(async (req, res) => {
     })
     .lean();
 
-  if (!blogs.length) {
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: "No blogs found",
-      blogs: [],
+      message: blogs.length ? "Most viewed blogs fetched" : "No blogs found",
+      blogs,
     });
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "Most viewed blogs fetched",
-    blogs,
-  });
 });
+
 
 //Get All Blogs
 export const getAllBlogs = catchAsyncError(async (req, res) => {
